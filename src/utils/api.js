@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// ✅ Fix
-const API = axios.create({ baseURL: 'http://localhost:5000/api' });
+const API = axios.create({ 
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
+});
+
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('farmfusion_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -21,26 +23,26 @@ API.interceptors.response.use(
 );
 
 export const authAPI = {
-  register: (data) => API.post('/auth/register', data),
-  login:    (data) => API.post('/auth/login', data),
-  getMe:    ()     => API.get('/auth/me'),
-  updateProfile: (data) => API.put('/auth/profile', data),
+  register:       (data) => API.post('/auth/register', data),
+  login:          (data) => API.post('/auth/login', data),
+  getMe:          ()     => API.get('/auth/me'),
+  updateProfile:  (data) => API.put('/auth/profile', data),
   changePassword: (data) => API.put('/auth/change-password', data),
 };
 
 export const animalsAPI = {
-  getAll:  (params) => API.get('/animals', { params }),
-  getOne:  (id)     => API.get(`/animals/${id}`),
-  create:  (data)   => API.post('/animals', data),
+  getAll:  (params)   => API.get('/animals', { params }),
+  getOne:  (id)       => API.get(`/animals/${id}`),
+  create:  (data)     => API.post('/animals', data),
   update:  (id, data) => API.put(`/animals/${id}`, data),
-  delete:  (id)     => API.delete(`/animals/${id}`),
+  delete:  (id)       => API.delete(`/animals/${id}`),
 };
 
 export const breedingAPI = {
-  getAll: ()         => API.get('/breeding'),
-  create: (data)     => API.post('/breeding', data),
-  update: (id, data) => API.put(`/breeding/${id}`, data),
-  delete: (id)       => API.delete(`/breeding/${id}`),
+  getAll: ()           => API.get('/breeding'),
+  create: (data)       => API.post('/breeding', data),
+  update: (id, data)   => API.put(`/breeding/${id}`, data),
+  delete: (id)         => API.delete(`/breeding/${id}`),
 };
 
 export const feedingAPI = {
@@ -50,10 +52,10 @@ export const feedingAPI = {
 };
 
 export const installmentsAPI = {
-  getAll:  ()         => API.get('/installments'),
-  create:  (data)     => API.post('/installments', data),
-  pay:     (id, data) => API.post(`/installments/${id}/pay`, data),
-  delete:  (id)       => API.delete(`/installments/${id}`),
+  getAll:  ()           => API.get('/installments'),
+  create:  (data)       => API.post('/installments', data),
+  pay:     (id, data)   => API.post(`/installments/${id}/pay`, data),
+  delete:  (id)         => API.delete(`/installments/${id}`),
 };
 
 export const vouchersAPI = {
