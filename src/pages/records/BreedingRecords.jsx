@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { breedingAPI, animalsAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
 
 const defaultForm = {
   femaleAnimal: '', maleAnimal: '',
@@ -56,10 +55,8 @@ export default function BreedingRecords() {
   };
 
   const outcomeMap = {
-    Pending:     'badge-orange',
-    Successful:  'badge-green',
-    Failed:      'badge-red',
-    Miscarriage: 'badge-red'
+    Pending: 'badge-orange', Successful: 'badge-green',
+    Failed: 'badge-red', Miscarriage: 'badge-red'
   };
 
   const females = animals.filter(a => a.gender === 'Female');
@@ -73,14 +70,12 @@ export default function BreedingRecords() {
       </div>
 
       <div className="page-content">
-
-        {/* Summary Cards */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '24px' }}>
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Records', value: records.length,                                          icon: '🧬', cls: 'purple' },
-            { label: 'Pending',       value: records.filter(r => r.outcome === 'Pending').length,     icon: '⏳', cls: 'orange' },
-            { label: 'Successful',    value: records.filter(r => r.outcome === 'Successful').length,  icon: '✅', cls: 'green'  },
-            { label: 'Failed',        value: records.filter(r => r.outcome === 'Failed').length,      icon: '❌', cls: 'blue'   },
+            { label: 'Total Records', value: records.length,                                         icon: '🧬', cls: 'purple' },
+            { label: 'Pending',       value: records.filter(r => r.outcome === 'Pending').length,    icon: '⏳', cls: 'orange' },
+            { label: 'Successful',    value: records.filter(r => r.outcome === 'Successful').length, icon: '✅', cls: 'green'  },
+            { label: 'Failed',        value: records.filter(r => r.outcome === 'Failed').length,     icon: '❌', cls: 'blue'   },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
@@ -107,13 +102,9 @@ export default function BreedingRecords() {
               <table>
                 <thead>
                   <tr>
-                    <th>Female Animal</th>
-                    <th>Male Animal</th>
-                    <th>Breeding Date</th>
-                    <th>Expected Delivery</th>
-                    <th>Outcome</th>
-                    <th>Notes</th>
-                    <th>Actions</th>
+                    <th>Female Animal</th><th>Male Animal</th>
+                    <th>Breeding Date</th><th>Expected Delivery</th>
+                    <th>Outcome</th><th>Notes</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -121,23 +112,17 @@ export default function BreedingRecords() {
                     <tr key={r._id}>
                       <td>
                         <strong>{r.femaleAnimal?.name || r.femaleAnimal?.tagId || '—'}</strong>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          {r.femaleAnimal?.species}
-                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.femaleAnimal?.species}</div>
                       </td>
                       <td>{r.maleAnimal?.name || r.maleAnimal?.tagId || 'External'}</td>
                       <td>{r.breedingDate ? new Date(r.breedingDate).toLocaleDateString() : '—'}</td>
                       <td>{r.expectedDelivery ? new Date(r.expectedDelivery).toLocaleDateString() : '—'}</td>
-                      <td>
-                        <span className={`badge ${outcomeMap[r.outcome]}`}>{r.outcome}</span>
-                      </td>
+                      <td><span className={`badge ${outcomeMap[r.outcome]}`}>{r.outcome}</span></td>
                       <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {r.notes || '—'}
                       </td>
                       <td>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>
-                          Delete
-                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
                       </td>
                     </tr>
                   ))}
@@ -148,7 +133,6 @@ export default function BreedingRecords() {
         </div>
       </div>
 
-      {/* Add Record Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -160,81 +144,53 @@ export default function BreedingRecords() {
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Female Animal *</label>
-                  <select
-                    value={form.femaleAnimal}
-                    onChange={e => setForm(p => ({ ...p, femaleAnimal: e.target.value }))}
-                    required
-                  >
+                  <select value={form.femaleAnimal}
+                    onChange={e => setForm(p => ({ ...p, femaleAnimal: e.target.value }))} required>
                     <option value="">Select female animal</option>
                     {females.map(a => (
-                      <option key={a._id} value={a._id}>
-                        {a.name || a.tagId} ({a.species})
-                      </option>
+                      <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
                     ))}
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label>Male Animal (optional)</label>
-                  <select
-                    value={form.maleAnimal}
-                    onChange={e => setForm(p => ({ ...p, maleAnimal: e.target.value }))}
-                  >
+                  <select value={form.maleAnimal}
+                    onChange={e => setForm(p => ({ ...p, maleAnimal: e.target.value }))}>
                     <option value="">External / Unknown</option>
                     {males.map(a => (
-                      <option key={a._id} value={a._id}>
-                        {a.name || a.tagId} ({a.species})
-                      </option>
+                      <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
                     ))}
                   </select>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Breeding Date *</label>
-                    <input
-                      type="date"
-                      value={form.breedingDate}
-                      onChange={e => setForm(p => ({ ...p, breedingDate: e.target.value }))}
-                      required
-                    />
+                    <input type="date" value={form.breedingDate}
+                      onChange={e => setForm(p => ({ ...p, breedingDate: e.target.value }))} required />
                   </div>
                   <div className="form-group">
                     <label>Expected Delivery</label>
-                    <input
-                      type="date"
-                      value={form.expectedDelivery}
-                      onChange={e => setForm(p => ({ ...p, expectedDelivery: e.target.value }))}
-                    />
+                    <input type="date" value={form.expectedDelivery}
+                      onChange={e => setForm(p => ({ ...p, expectedDelivery: e.target.value }))} />
                   </div>
                 </div>
-
                 <div className="form-group">
                   <label>Outcome</label>
-                  <select
-                    value={form.outcome}
-                    onChange={e => setForm(p => ({ ...p, outcome: e.target.value }))}
-                  >
+                  <select value={form.outcome}
+                    onChange={e => setForm(p => ({ ...p, outcome: e.target.value }))}>
                     {['Pending', 'Successful', 'Failed', 'Miscarriage'].map(o => (
                       <option key={o}>{o}</option>
                     ))}
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label>Notes</label>
-                  <textarea
-                    value={form.notes}
+                  <textarea value={form.notes}
                     onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                    rows={3} style={{ resize: 'vertical' }}
-                    placeholder="Any additional notes..."
-                  />
+                    rows={3} style={{ resize: 'vertical' }} placeholder="Any additional notes..." />
                 </div>
-
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
-                    Cancel
-                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
                     {saving ? 'Saving...' : 'Add Record'}
                   </button>

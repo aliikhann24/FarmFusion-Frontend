@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { animalsAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 const STATUSES = ['Healthy', 'Sick', 'Pregnant', 'Sold', 'Deceased'];
@@ -33,27 +32,23 @@ export default function MyAnimals() {
 
   useEffect(() => { load(); }, [search, filterSpecies]);
 
-  const openAdd = () => {
-    setEditAnimal(null);
-    setForm(defaultForm);
-    setShowModal(true);
-  };
+  const openAdd = () => { setEditAnimal(null); setForm(defaultForm); setShowModal(true); };
 
   const openEdit = (animal) => {
     setEditAnimal(animal);
     setForm({
-      tagId: animal.tagId || '',
-      name: animal.name || '',
-      species: animal.species,
-      breed: animal.breed || '',
-      gender: animal.gender,
-      color: animal.color || '',
-      dateOfBirth: animal.dateOfBirth ? animal.dateOfBirth.split('T')[0] : '',
-      weight: animal.weight || '',
-      status: animal.status,
+      tagId:         animal.tagId || '',
+      name:          animal.name || '',
+      species:       animal.species,
+      breed:         animal.breed || '',
+      gender:        animal.gender,
+      color:         animal.color || '',
+      dateOfBirth:   animal.dateOfBirth   ? animal.dateOfBirth.split('T')[0]   : '',
+      weight:        animal.weight || '',
+      status:        animal.status,
       purchasePrice: animal.purchasePrice || '',
-      purchaseDate: animal.purchaseDate ? animal.purchaseDate.split('T')[0] : '',
-      notes: animal.notes || ''
+      purchaseDate:  animal.purchaseDate  ? animal.purchaseDate.split('T')[0]  : '',
+      notes:         animal.notes || ''
     });
     setShowModal(true);
   };
@@ -100,27 +95,16 @@ export default function MyAnimals() {
       </div>
 
       <div className="page-content">
-
-        {/* Search & Filter */}
         <div className="filter-bar">
-          <input
-            className="search-input"
-            placeholder="🔍 Search by name or tag ID..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <select
-            className="search-input"
-            style={{ flex: 'none', width: 'auto' }}
-            value={filterSpecies}
-            onChange={e => setFilterSpecies(e.target.value)}
-          >
+          <input className="search-input" placeholder="🔍 Search by name or tag ID..."
+            value={search} onChange={e => setSearch(e.target.value)} />
+          <select className="search-input" style={{ flex: 'none', width: 'auto' }}
+            value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
             <option value="">All Species</option>
             {SPECIES.map(s => <option key={s}>{s}</option>)}
           </select>
         </div>
 
-        {/* Table */}
         <div className="card">
           {loading ? (
             <div className="empty-state"><p>Loading animals...</p></div>
@@ -136,14 +120,9 @@ export default function MyAnimals() {
               <table>
                 <thead>
                   <tr>
-                    <th>Tag ID</th>
-                    <th>Name</th>
-                    <th>Species</th>
-                    <th>Breed</th>
-                    <th>Gender</th>
-                    <th>Weight</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>Tag ID</th><th>Name</th><th>Species</th>
+                    <th>Breed</th><th>Gender</th><th>Weight</th>
+                    <th>Status</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -155,11 +134,7 @@ export default function MyAnimals() {
                       <td>{a.breed || '—'}</td>
                       <td>{a.gender}</td>
                       <td>{a.weight ? `${a.weight} kg` : '—'}</td>
-                      <td>
-                        <span className={`badge ${statusBadge[a.status] || 'badge-gray'}`}>
-                          {a.status}
-                        </span>
-                      </td>
+                      <td><span className={`badge ${statusBadge[a.status] || 'badge-gray'}`}>{a.status}</span></td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button className="btn btn-outline btn-sm" onClick={() => openEdit(a)}>Edit</button>
@@ -175,7 +150,6 @@ export default function MyAnimals() {
         </div>
       </div>
 
-      {/* Add / Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -211,8 +185,7 @@ export default function MyAnimals() {
                   <div className="form-group">
                     <label>Gender *</label>
                     <select name="gender" value={form.gender} onChange={handleChange}>
-                      <option>Female</option>
-                      <option>Male</option>
+                      <option>Female</option><option>Male</option>
                     </select>
                   </div>
                   <div className="form-group">
