@@ -316,3 +316,52 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .main-content { margin-left: 0 !important; }
   .card { box-shadow: none; border: 1px solid #ddd; }
 }
+/* ===== RESPONSIVE TABLES ===== */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  min-width: 600px;
+  width: 100%;
+}
+
+/* ===== RESPONSIVE STATS GRID ===== */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+  }
+
+  .filter-bar .search-input {
+    width: 100% !important;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .modal {
+    margin: 10px;
+    width: calc(100% - 20px) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}

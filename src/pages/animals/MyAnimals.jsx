@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { animalsAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 const STATUSES = ['Healthy', 'Sick', 'Pregnant', 'Sold', 'Deceased'];
