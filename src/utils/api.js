@@ -76,10 +76,12 @@ export const cattleAPI = {
   create:  (data)   => API.post('/cattle', data),
   buy:     (id)     => API.post(`/cattle/${id}/buy`),
 };
+
 export const enquiryAPI = {
-  submit:   (data)       => api.post('/enquiries', data),
-  received: ()           => api.get('/enquiries/received'),
-  sent:     ()           => api.get('/enquiries/sent'),
-  update:   (id, status) => api.patch(`/enquiries/${id}/status`, { status }),
+  submit:   (data)       => API.post('/enquiries', data),
+  received: ()           => API.get('/enquiries/received'),
+  sent:     ()           => API.get('/enquiries/sent'),
+  update:   (id, status) => API.patch(`/enquiries/${id}/status`, { status }),
 };
+
 export default API;
