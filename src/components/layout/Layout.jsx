@@ -37,32 +37,34 @@ export default function Layout() {
   };
 
   const closeSidebar = () => setSidebarOpen(false);
-
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
 
   return (
     <div className="app-layout">
 
-      {/* Mobile Top Bar */}
+      {/* ===== MOBILE TOP BAR ===== */}
       <div className="mobile-topbar">
-        <button className="hamburger" onClick={() => setSidebarOpen(true)}>
-          ☰
-        </button>
+        <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
         <div className="mobile-logo">Farm<span>Fusion</span></div>
         <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
           {initials}
         </div>
       </div>
 
-      {/* Overlay when sidebar open on mobile */}
+      {/* ===== OVERLAY ===== */}
       {sidebarOpen && (
-        <div className="sidebar-overlay" onClick={closeSidebar} />
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 199
+          }}
+          onClick={closeSidebar}
+        />
       )}
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-
-        {/* Close button on mobile */}
+      {/* ===== SIDEBAR ===== */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close" onClick={closeSidebar}>✕</button>
 
         <div className="sidebar-logo">
@@ -97,12 +99,12 @@ export default function Layout() {
           </div>
           <button onClick={handleLogout}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem' }}
-            title="Logout">
-            🚪
+            title="Logout">🚪
           </button>
         </div>
       </aside>
 
+      {/* ===== MAIN CONTENT ===== */}
       <main className="main-content">
         <Outlet />
       </main>
