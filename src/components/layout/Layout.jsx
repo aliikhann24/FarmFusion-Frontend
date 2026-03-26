@@ -42,36 +42,25 @@ export default function Layout() {
   return (
     <div className="app-layout">
 
-      {/* ===== MOBILE TOP BAR ===== */}
-      <div className="mobile-topbar">
-        <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
-        <div className="mobile-logo">Farm<span>Fusion</span></div>
-        <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
-          {initials}
-        </div>
-      </div>
-
       {/* ===== OVERLAY ===== */}
       {sidebarOpen && (
         <div
+          onClick={closeSidebar}
           style={{
             position: 'fixed', inset: 0,
             background: 'rgba(0,0,0,0.5)',
             zIndex: 199
           }}
-          onClick={closeSidebar}
         />
       )}
 
       {/* ===== SIDEBAR ===== */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close" onClick={closeSidebar}>✕</button>
-
         <div className="sidebar-logo">
           <h1>Farm<span>Fusion</span></h1>
           <p>Smart Livestock Management</p>
         </div>
-
         <nav className="sidebar-nav">
           {navItems.map(section => (
             <div className="nav-section" key={section.section}>
@@ -90,7 +79,6 @@ export default function Layout() {
             </div>
           ))}
         </nav>
-
         <div className="sidebar-user">
           <div className="user-avatar">{initials}</div>
           <div className="user-info">
@@ -106,8 +94,19 @@ export default function Layout() {
 
       {/* ===== MAIN CONTENT ===== */}
       <main className="main-content">
+
+        {/* Mobile topbar — INSIDE main-content at very top */}
+        <div className="mobile-topbar">
+          <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
+          <div className="mobile-logo">Farm<span>Fusion</span></div>
+          <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
+            {initials}
+          </div>
+        </div>
+
         <Outlet />
       </main>
+
     </div>
   );
 }
