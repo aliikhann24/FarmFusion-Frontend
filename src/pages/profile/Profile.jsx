@@ -56,7 +56,7 @@ export default function Profile() {
 
   return (
     <div>
-      <div className="page-bg bg-profile">
+      <div className="page header">
         <div><h2>👤 My Profile</h2><p>Manage your account details</p></div>
       </div>
 

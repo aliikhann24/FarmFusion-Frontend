@@ -200,7 +200,7 @@ export default function AnimalProgress() {
 
   return (
     <div>
-      <div className="page-bg bg-progress">
+      <div className="page header">
         <div><h2>📈 Animal Progress</h2><p>Track health & growth over time</p></div>
         <button className="btn btn-primary" onClick={openAdd}>+ Add Progress</button>
       </div>

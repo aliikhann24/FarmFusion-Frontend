@@ -89,7 +89,7 @@ export default function MyAnimals() {
 
   return (
     <div>
-      <div className="page-bg bg-animals">
+      <div className="page header">
         <div><h2>🐄 My Animals</h2><p>Manage your livestock</p></div>
         <button className="btn btn-primary" onClick={openAdd}>+ Add Animal</button>
       </div>

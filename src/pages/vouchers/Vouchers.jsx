@@ -61,7 +61,7 @@ export default function Vouchers() {
 
   return (
     <div>
-      <div className="page-bg bg-vouchers">
+      <div className="page header">
         <div><h2>🧾 My Vouchers</h2><p>Financial records & transactions</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Voucher</button>
       </div>

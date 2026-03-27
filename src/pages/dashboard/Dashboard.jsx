@@ -74,7 +74,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="page-bg bg-dashboard">
+      <div className="page header">
         <div>
           <h2>Good day, {user?.name?.split(' ')[0]} 👋</h2>
           <p>{user?.farmName ? `${user.farmName} • ` : ''}Your farm overview</p>

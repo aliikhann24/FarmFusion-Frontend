@@ -61,7 +61,7 @@ export default function FeedingRecords() {
 
   return (
     <div>
-      <div className="page-bg bg-feeding">
+      <div className="page header">
         <div><h2>🌾 Feeding Records</h2><p>Track animal feed & nutrition</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Record</button>
       </div>
