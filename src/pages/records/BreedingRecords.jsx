@@ -64,7 +64,7 @@ export default function BreedingRecords() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-bg bg-breeding">
         <div><h2>🧬 Breeding Records</h2><p>Track animal breeding history</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Record</button>
       </div>
