@@ -128,8 +128,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
   overflow-y: auto;
   z-index: 200;
   transition: transform 0.3s ease;
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
 }
 .sidebar::-webkit-scrollbar { width: 4px; }
 .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -178,7 +177,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;
 }
 
-/* Sidebar close button — hidden on desktop */
 .sidebar-close {
   display: none;
   position: absolute;
@@ -197,12 +195,35 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
   margin-left: 260px;
   flex: 1;
   min-height: 100vh;
-  background: var(--bg);
   width: calc(100% - 260px);
-  /* Important: do not add position relative here */
+  position: relative;
+  /* Farm texture background */
+  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=60');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
-/* ===== MOBILE TOPBAR — hidden on desktop ===== */
+/* Light overlay so content is readable */
+.main-content::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(248, 250, 248, 0.93);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* All content above overlay */
+.mobile-topbar,
+.page-header,
+.page-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== MOBILE TOPBAR ===== */
 .mobile-topbar { display: none; }
 
 .hamburger {
@@ -319,10 +340,8 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 /* ===== MODAL ===== */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
   background: rgba(0,0,0,0.55);
   display: flex;
   align-items: center;
@@ -331,7 +350,6 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   padding: 20px;
   animation: fadeIn 0.15s ease;
 }
-
 .modal {
   background: white;
   border-radius: var(--radius-lg);
@@ -344,7 +362,6 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   position: relative;
   margin: 0 auto;
 }
-
 .modal-header {
   padding: 20px 24px 16px;
   display: flex; align-items: center; justify-content: space-between;
@@ -431,32 +448,17 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 
 /* ===== MOBILE (max 768px) ===== */
 @media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); width: 260px; z-index: 200; }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-close { display: flex; }
 
-  /* Hide sidebar completely off screen */
-  .sidebar {
-    transform: translateX(-100%);
-    width: 260px;
-    z-index: 200;
-  }
-
-  /* Sidebar slides in when open class added */
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
-  /* Show X close button inside sidebar */
-  .sidebar-close {
-    display: flex;
-  }
-
-  /* Full width main — NO left gap */
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
+    background-attachment: scroll;
   }
 
-  /* Show mobile top bar */
- .mobile-topbar {
+  .mobile-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -471,10 +473,8 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
     height: 52px;
   }
 
-  /* Page header not sticky on mobile */
   .page-header {
-    position: relative;
-    top: auto;
+    position: relative; top: auto;
     padding: 14px 16px;
     flex-direction: column;
     align-items: flex-start;
@@ -483,45 +483,28 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 
   .page-content { padding: 12px; }
 
-  /* Auth pages */
   .auth-wrapper { flex-direction: column; }
   .auth-left { padding: 24px 20px; flex: none; }
   .auth-left .features { display: none; }
-  .auth-right {
-    width: 100%; border-radius: 0;
-    padding: 24px 20px; align-items: flex-start;
-  }
+  .auth-right { width: 100%; border-radius: 0; padding: 24px 20px; align-items: flex-start; }
   .auth-form { max-width: 100%; }
 
-  /* Grids */
   .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px; }
   .charts-grid { grid-template-columns: 1fr; }
   .quick-actions-grid { grid-template-columns: repeat(3, 1fr); }
   .profile-grid { grid-template-columns: 1fr; }
 
-  /* Forms stack vertically */
   .form-row { grid-template-columns: 1fr !important; gap: 0 !important; }
   .form-actions { flex-direction: column; gap: 8px; }
   .form-actions button { width: 100%; justify-content: center; }
 
-  /* Filters stack */
   .filter-bar { flex-direction: column; }
   .filter-bar .search-input { width: 100%; }
 
-  /* Modal responsive */
   .modal-overlay { padding: 12px; }
-  .modal {
-    max-width: 100%;
-    max-height: 88vh;
-    border-radius: 16px;
-  }
-  .modal-header {
-    padding: 14px 16px;
-    border-radius: 16px 16px 0 0;
-  }
+  .modal { max-width: 100%; max-height: 88vh; border-radius: 16px; }
+  .modal-header { padding: 14px 16px; border-radius: 16px 16px 0 0; }
   .modal-body { padding: 14px 16px 20px; }
-
-  /* Upload box */
   .upload-box { padding: 16px; }
 }
 
@@ -535,6 +518,7 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .auth-left .tagline { font-size: 0.9rem; }
   .auth-right { padding: 16px; }
 }
+
 /* ===== AUTH PAGE WITH FARM BACKGROUND ===== */
 .auth-page {
   min-height: 100vh;
@@ -545,18 +529,15 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   padding: 20px;
 }
 
-/* Farm background image with dark overlay */
 .auth-bg {
   position: fixed;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1920&q=80');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   z-index: 0;
 }
 
-/* Dark green overlay on top of image */
 .auth-bg::after {
   content: '';
   position: absolute;
@@ -569,7 +550,16 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   );
 }
 
-/* Container holds branding + card side by side */
+/* LOGIN — green farm fields */
+.auth-bg-login {
+  background-image: url('cows.jpg');
+}
+
+/* REGISTER — cattle grazing */
+.auth-bg-register {
+  background-image: url('sheep.jpg');
+}
+
 .auth-container {
   position: relative;
   z-index: 1;
@@ -581,123 +571,63 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   margin: 0 auto;
 }
 
-/* Left branding section */
-.auth-brand {
-  flex: 1;
-  color: white;
-}
+.auth-brand { flex: 1; color: white; }
 
 .auth-brand-logo {
   font-family: 'Poppins', sans-serif;
-  font-size: 3rem;
-  font-weight: 800;
+  font-size: 3rem; font-weight: 800;
   margin-bottom: 16px;
   text-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-
 .auth-brand-logo span { color: #95d5b2; }
 
 .auth-brand-tagline {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  margin-bottom: 32px;
-  line-height: 1.6;
+  font-size: 1.1rem; opacity: 0.9;
+  margin-bottom: 32px; line-height: 1.6;
 }
 
 .auth-brand-features {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-
 .auth-brand-features li {
-  font-size: 0.95rem;
-  opacity: 0.9;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  font-size: 0.95rem; opacity: 0.9;
+  display: flex; align-items: center; gap: 10px;
   background: rgba(255,255,255,0.1);
-  padding: 10px 16px;
-  border-radius: 10px;
+  padding: 10px 16px; border-radius: 10px;
   backdrop-filter: blur(4px);
 }
 
-/* Right form card */
 .auth-card {
-  background: white;
-  border-radius: 24px;
-  padding: 40px;
-  width: 100%;
-  max-width: 420px;
+  background: white; border-radius: 24px;
+  padding: 40px; width: 100%; max-width: 420px;
   box-shadow: 0 24px 64px rgba(0,0,0,0.3);
   flex-shrink: 0;
 }
 
-.auth-card-header {
-  text-align: center;
-  margin-bottom: 28px;
-}
-
-.auth-card-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
-}
-
-.auth-card-header h2 {
-  font-size: 1.6rem;
-  color: var(--primary-dark);
-  margin-bottom: 6px;
-}
-
-.auth-card-header p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
+.auth-card-header { text-align: center; margin-bottom: 28px; }
+.auth-card-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.auth-card-header h2 { font-size: 1.6rem; color: var(--primary-dark); margin-bottom: 6px; }
+.auth-card-header p { color: var(--text-muted); font-size: 0.9rem; }
 
 .auth-card-footer {
-  text-align: center;
-  margin-top: 20px;
-  color: #666;
-  font-size: 0.9rem;
+  text-align: center; margin-top: 20px;
+  color: #666; font-size: 0.9rem;
 }
+.auth-card-footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.auth-card-footer a:hover { text-decoration: underline; }
 
-.auth-card-footer a {
-  color: var(--primary);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.auth-card-footer a:hover {
-  text-decoration: underline;
-}
-
-/* ===== AUTH RESPONSIVE ===== */
 @media (max-width: 768px) {
   .auth-container {
-    flex-direction: column;
-    gap: 24px;
-    padding: 20px 0;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
+    flex-direction: column; gap: 24px;
+    padding: 20px 0; align-items: center;
+    justify-content: center; min-height: 100vh;
   }
-
-  .auth-brand {
-    text-align: center;
-    flex: none;
-  }
-
+  .auth-brand { text-align: center; flex: none; }
   .auth-brand-logo { font-size: 2rem; }
   .auth-brand-tagline { font-size: 0.95rem; margin-bottom: 16px; }
   .auth-brand-features { display: none; }
-
-  .auth-card {
-    padding: 28px 20px;
-    border-radius: 20px;
-    max-width: 100%;
-    width: 100%;
-  }
+  .auth-card { padding: 28px 20px; border-radius: 20px; max-width: 100%; width: 100%; }
 }
 
 @media (max-width: 480px) {
@@ -706,15 +636,3 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .auth-card { padding: 24px 16px; }
   .auth-card-header h2 { font-size: 1.4rem; }
 }
-/* ===== LOGIN BACKGROUND ===== */
-.auth-bg-login {
-  background-image: url('cows.jpg');
-}
-
-/* ===== REGISTER BACKGROUND ===== */
-.auth-bg-register {
-  background-image: url('sheep.jpg');
-}
-
-
-
