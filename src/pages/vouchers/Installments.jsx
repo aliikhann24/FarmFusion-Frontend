@@ -78,7 +78,7 @@ export default function Installments() {
 
   return (
     <div>
-      <div className="page header">
+      <div className="page-installments">
         <div><h2>💳 My Installments</h2><p>Track your payment plans</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Plan</button>
       </div>

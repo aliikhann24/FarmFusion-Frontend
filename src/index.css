@@ -184,25 +184,86 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
   font-size: 0.85rem;
   align-items: center; justify-content: center; z-index: 10;
 }
+/* ===== PAGE BACKGROUND IMAGES ===== */
 
-/* ===== MAIN CONTENT ===== */
-/* Farm texture background using body instead to avoid z-index issues */
+/* Default body background — fallback */
 body {
-  background-image: url('cattle.jpg');
+  background-color: var(--bg);
+}
+
+/* Each page sets its own background on body via class */
+.page-dashboard    ~ * ,
+.page-dashboard {
+  --page-bg: url('cattle.jpg');
+}
+
+/* Override body bg per page using JS — see Step 3 */
+
+/* ===== INDIVIDUAL PAGE BACKGROUNDS ===== */
+.page-dashboard::before,
+.page-animals::before,
+.page-breeding::before,
+.page-feeding::before,
+.page-progress::before,
+.page-cattle::before,
+.page-installments::before,
+.page-vouchers::before,
+.page-profile::before {
+  content: '';
+  position: fixed;
+  inset: 0;
   background-size: cover;
   background-position: center;
-  background-attachment: fixed;
   background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -1;
+  opacity: 0.08;
 }
 
-.main-content {
-  margin-left: 260px;
-  flex: 1;
-  min-height: 100vh;
-  width: calc(100% - 260px);
-  background: rgba(248, 250, 248, 0.94);
+/* Dashboard — farm overview */
+.page-dashboard::before {
+  background-image: url('background.jpg');
 }
 
+/* My Animals — cows in field */
+.page-animals::before {
+  background-image: url('buffalo.jpg');
+}
+
+/* Breeding — two animals */
+.page-breeding::before {
+  background-image: url('bull.jpg');
+}
+
+/* Feeding — hay and feed */
+.page-feeding::before {
+  background-image: url('calfs.jpg');
+}
+
+/* Progress — healthy animals */
+.page-progress::before {
+  background-image: url('calfs.jpg');
+}
+
+/* Cattle Market — marketplace */
+.page-cattle::before {
+  background-image: url('cattles.jpg');
+}
+
+/* Installments — finance */
+.page-installments::before {
+  background-image: url('group\ cows.jpg');
+}
+
+/* Vouchers — finance records */
+.page-vouchers::before {
+  background-image: url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1920&q=60');
+}
+
+/* Profile — farmer */
+.page-profile::before {
+  background-image: url('love.jpg');
+}
 /* ===== MOBILE TOPBAR ===== */
 .mobile-topbar { display: none; }
 
