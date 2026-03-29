@@ -105,7 +105,6 @@ export default function Layout() {
             {initials}
           </div>
         </div>
-        <img src={favicon.svg} alt="FarmFusion" height="40" />
         <Outlet />
       </main>
 
