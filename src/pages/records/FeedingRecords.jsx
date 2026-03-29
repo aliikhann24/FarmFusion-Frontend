@@ -8,12 +8,13 @@ const defaultForm = {
 };
 
 export default function FeedingRecords() {
-  const [records, setRecords] = useState([]);
-  const [animals, setAnimals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(defaultForm);
-  const [saving, setSaving] = useState(false);
+  const [records, setRecords]       = useState([]);
+  const [animals, setAnimals]       = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [showModal, setShowModal]   = useState(false);
+  const [editRecord, setEditRecord] = useState(null);
+  const [form, setForm]             = useState(defaultForm);
+  const [saving, setSaving]         = useState(false);
   const [filterAnimal, setFilterAnimal] = useState('');
 
   const load = async () => {
@@ -31,14 +32,44 @@ export default function FeedingRecords() {
 
   useEffect(() => { load(); }, [filterAnimal]);
 
+  const openAdd = () => {
+    setEditRecord(null);
+    setForm(defaultForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (r) => {
+    setEditRecord(r);
+    setForm({
+      animal:      r.animal?._id || '',
+      feedType:    r.feedType    || '',
+      quantity:    r.quantity    || '',
+      unit:        r.unit        || 'kg',
+      feedingDate: r.feedingDate ? r.feedingDate.split('T')[0] : '',
+      cost:        r.cost        || '',
+      notes:       r.notes       || ''
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditRecord(null);
+    setForm(defaultForm);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await feedingAPI.create(form);
-      toast.success('Feeding record added! 🌾');
-      setShowModal(false);
-      setForm(defaultForm);
+      if (editRecord) {
+        await feedingAPI.update(editRecord._id, form);
+        toast.success('Feeding record updated! ✅');
+      } else {
+        await feedingAPI.create(form);
+        toast.success('Feeding record added! 🌾');
+      }
+      closeModal();
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
@@ -60,20 +91,19 @@ export default function FeedingRecords() {
   const feedTypes     = [...new Set(records.map(r => r.feedType))].length;
 
   return (
-    <div>
-      <div className="page-feeding">
+    <div className="page-feeding">
+      <div className="page-header">
         <div><h2>🌾 Feeding Records</h2><p>Track animal feed & nutrition</p></div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Record</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
       </div>
 
       <div className="page-content">
-
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Records',    value: totalRecords,                icon: '🌾', cls: 'green'  },
-            { label: 'Animals Fed',      value: uniqueAnimals,               icon: '🐄', cls: 'blue'   },
-            { label: 'Feed Types',       value: feedTypes,                   icon: '🥣', cls: 'orange' },
-            { label: 'Total Cost (PKR)', value: totalCost.toLocaleString(),  icon: '💰', cls: 'purple' },
+            { label: 'Total Records',    value: totalRecords,               icon: '🌾', cls: 'green'  },
+            { label: 'Animals Fed',      value: uniqueAnimals,              icon: '🐄', cls: 'blue'   },
+            { label: 'Feed Types',       value: feedTypes,                  icon: '🥣', cls: 'orange' },
+            { label: 'Total Cost (PKR)', value: totalCost.toLocaleString(), icon: '💰', cls: 'purple' },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
@@ -86,17 +116,12 @@ export default function FeedingRecords() {
         </div>
 
         <div className="filter-bar">
-          <select
-            className="search-input"
+          <select className="search-input"
             style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
-            value={filterAnimal}
-            onChange={e => setFilterAnimal(e.target.value)}
-          >
+            value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
             <option value="">All Animals</option>
             {animals.map(a => (
-              <option key={a._id} value={a._id}>
-                {a.name || a.tagId} ({a.species})
-              </option>
+              <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
             ))}
           </select>
         </div>
@@ -109,20 +134,15 @@ export default function FeedingRecords() {
               <div className="icon">🌾</div>
               <h3>No feeding records</h3>
               <p>Start logging what your animals eat</p>
-              <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Record</button>
+              <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
             </div>
           ) : (
             <div className="table-container">
               <table>
                 <thead>
                   <tr>
-                    <th>Animal</th>
-                    <th>Feed Type</th>
-                    <th>Quantity</th>
-                    <th>Cost (PKR)</th>
-                    <th>Date</th>
-                    <th>Notes</th>
-                    <th>Actions</th>
+                    <th>Animal</th><th>Feed Type</th><th>Quantity</th>
+                    <th>Cost (PKR)</th><th>Date</th><th>Notes</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,9 +150,7 @@ export default function FeedingRecords() {
                     <tr key={r._id}>
                       <td>
                         <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          {r.animal?.species}
-                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.animal?.species}</div>
                       </td>
                       <td><span className="badge badge-green">{r.feedType}</span></td>
                       <td>{r.quantity} {r.unit}</td>
@@ -142,9 +160,10 @@ export default function FeedingRecords() {
                         {r.notes || '—'}
                       </td>
                       <td>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>
-                          Delete
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -156,11 +175,11 @@ export default function FeedingRecords() {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add Feeding Record</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3>{editRecord ? 'Edit Feeding Record' : 'Add Feeding Record'}</h3>
+              <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
@@ -218,9 +237,9 @@ export default function FeedingRecords() {
                     rows={3} style={{ resize: 'vertical' }} placeholder="Any additional notes..." />
                 </div>
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Saving...' : 'Add Record'}
+                    {saving ? 'Saving...' : editRecord ? 'Update Record' : 'Add Record'}
                   </button>
                 </div>
               </form>

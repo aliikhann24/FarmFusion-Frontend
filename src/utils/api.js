@@ -46,9 +46,10 @@ export const breedingAPI = {
 };
 
 export const feedingAPI = {
-  getAll: (params) => API.get('/feeding', { params }),
-  create: (data)   => API.post('/feeding', data),
-  delete: (id)     => API.delete(`/feeding/${id}`),
+  getAll:  (params)   => API.get('/feeding', { params }),
+  create:  (data)     => API.post('/feeding', data),
+  update:  (id, data) => API.put(`/feeding/${id}`, data),  // ✅ add this if missing
+  delete:  (id)       => API.delete(`/feeding/${id}`),
 };
 
 export const installmentsAPI = {

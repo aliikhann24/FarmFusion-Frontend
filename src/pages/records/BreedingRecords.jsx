@@ -9,12 +9,13 @@ const defaultForm = {
 };
 
 export default function BreedingRecords() {
-  const [records, setRecords] = useState([]);
-  const [animals, setAnimals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [records, setRecords]     = useState([]);
+  const [animals, setAnimals]     = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(defaultForm);
-  const [saving, setSaving] = useState(false);
+  const [editRecord, setEditRecord] = useState(null);
+  const [form, setForm]           = useState(defaultForm);
+  const [saving, setSaving]       = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -31,14 +32,43 @@ export default function BreedingRecords() {
 
   useEffect(() => { load(); }, []);
 
+  const openAdd = () => {
+    setEditRecord(null);
+    setForm(defaultForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (r) => {
+    setEditRecord(r);
+    setForm({
+      femaleAnimal:     r.femaleAnimal?._id || '',
+      maleAnimal:       r.maleAnimal?._id   || '',
+      breedingDate:     r.breedingDate     ? r.breedingDate.split('T')[0]     : '',
+      expectedDelivery: r.expectedDelivery ? r.expectedDelivery.split('T')[0] : '',
+      outcome:          r.outcome || 'Pending',
+      notes:            r.notes   || ''
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditRecord(null);
+    setForm(defaultForm);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await breedingAPI.create(form);
-      toast.success('Breeding record added! 🧬');
-      setShowModal(false);
-      setForm(defaultForm);
+      if (editRecord) {
+        await breedingAPI.update(editRecord._id, form);
+        toast.success('Breeding record updated! ✅');
+      } else {
+        await breedingAPI.create(form);
+        toast.success('Breeding record added! 🧬');
+      }
+      closeModal();
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
@@ -63,10 +93,10 @@ export default function BreedingRecords() {
   const males   = animals.filter(a => a.gender === 'Male');
 
   return (
-    <div>
-      <div className="page-breeding">
+    <div className="page-breeding">
+      <div className="page-header">
         <div><h2>🧬 Breeding Records</h2><p>Track animal breeding history</p></div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Record</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
       </div>
 
       <div className="page-content">
@@ -95,7 +125,7 @@ export default function BreedingRecords() {
               <div className="icon">🧬</div>
               <h3>No breeding records</h3>
               <p>Start tracking your animals' breeding history</p>
-              <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Record</button>
+              <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
             </div>
           ) : (
             <div className="table-container">
@@ -122,7 +152,10 @@ export default function BreedingRecords() {
                         {r.notes || '—'}
                       </td>
                       <td>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -134,11 +167,11 @@ export default function BreedingRecords() {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add Breeding Record</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3>{editRecord ? 'Edit Breeding Record' : 'Add Breeding Record'}</h3>
+              <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
@@ -190,9 +223,9 @@ export default function BreedingRecords() {
                     rows={3} style={{ resize: 'vertical' }} placeholder="Any additional notes..." />
                 </div>
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Saving...' : 'Add Record'}
+                    {saving ? 'Saving...' : editRecord ? 'Update Record' : 'Add Record'}
                   </button>
                 </div>
               </form>
