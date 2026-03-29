@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { animalsAPI, installmentsAPI, vouchersAPI, breedingAPI, feedingAPI } from '../../utils/api';
+import { animalsAPI, installmentsAPI, vouchersAPI, breedingAPI, feedingAPI, vaccinationAPI } from '../../utils/api';
 import Spinner from '../../components/common/Spinner';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
@@ -13,35 +13,40 @@ const COLORS = ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#95d5b2', '#d8f3dc'
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ animals: 0, installments: 0, vouchers: 0, breeding: 0 });
-  const [recentAnimals, setRecentAnimals] = useState([]);
-  const [speciesData, setSpeciesData] = useState([]);
-  const [healthData, setHealthData] = useState([]);
-  const [feedingData, setFeedingData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ animals: 0, installments: 0, vouchers: 0, breeding: 0, vaccinations: 0 });
+  const [recentAnimals, setRecentAnimals]     = useState([]);
+  const [recentVaccinations, setRecentVaccinations] = useState([]);
+  const [speciesData, setSpeciesData]         = useState([]);
+  const [healthData,  setHealthData]          = useState([]);
+  const [feedingData, setFeedingData]         = useState([]);
+  const [loading, setLoading]                 = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [animalsRes, instRes, vouchRes, breedRes, feedRes] = await Promise.all([
+        const [animalsRes, instRes, vouchRes, breedRes, feedRes, vaccRes] = await Promise.all([
           animalsAPI.getAll(),
           installmentsAPI.getAll(),
           vouchersAPI.getAll(),
           breedingAPI.getAll(),
           feedingAPI.getAll(),
+          vaccinationAPI.getAll(),
         ]);
 
-        const animals = animalsRes.data.animals || [];
-        const feeding = feedRes.data.records   || [];
+        const animals      = animalsRes.data.animals  || [];
+        const feeding      = feedRes.data.records     || [];
+        const vaccinations = vaccRes.data.records     || [];
 
         setStats({
           animals:      animalsRes.data.count || animals.length,
-          installments: instRes.data.installments?.length || 0,
-          vouchers:     vouchRes.data.vouchers?.length    || 0,
-          breeding:     breedRes.data.records?.length     || 0,
+          installments: instRes.data.installments?.length  || 0,
+          vouchers:     vouchRes.data.vouchers?.length     || 0,
+          breeding:     breedRes.data.records?.length      || 0,
+          vaccinations: vaccinations.length,
         });
 
         setRecentAnimals(animals.slice(0, 5));
+        setRecentVaccinations(vaccinations.slice(0, 3));
 
         const speciesCount = {};
         animals.forEach(a => { speciesCount[a.species] = (speciesCount[a.species] || 0) + 1; });
@@ -72,9 +77,11 @@ export default function Dashboard() {
     return map[species] || 'badge-gray';
   };
 
+  const vaccStatusMap = { Given: 'badge-green', Scheduled: 'badge-orange', Overdue: 'badge-red' };
+
   return (
-    <div>
-      <div className="page-dashboard">
+    <div className="page-dashboard">
+      <div className="page-header">
         <div>
           <h2>Good day, {user?.name?.split(' ')[0]} 👋</h2>
           <p>{user?.farmName ? `${user.farmName} • ` : ''}Your farm overview</p>
@@ -87,10 +94,10 @@ export default function Dashboard() {
         {/* Stats Cards */}
         <div className="stats-grid">
           {[
-            { icon: '🐄', label: 'Total Animals',     value: stats.animals,      cls: 'green'  },
-            { icon: '💳', label: 'Installment Plans',  value: stats.installments, cls: 'orange' },
-            { icon: '🧾', label: 'Vouchers',           value: stats.vouchers,     cls: 'blue'   },
-            { icon: '🧬', label: 'Breeding Records',   value: stats.breeding,     cls: 'purple' },
+            { icon: '🐄', label: 'Total Animals',    value: stats.animals,      cls: 'green'  },
+            { icon: '💉', label: 'Vaccinations',     value: stats.vaccinations, cls: 'blue'   },
+            { icon: '🧬', label: 'Breeding Records', value: stats.breeding,     cls: 'purple' },
+            { icon: '💳', label: 'Installments',     value: stats.installments, cls: 'orange' },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
@@ -114,7 +121,8 @@ export default function Dashboard() {
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
-                    <Pie data={speciesData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                    <Pie data={speciesData} cx="50%" cy="50%" outerRadius={80} dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}`}>
                       {speciesData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip />
@@ -160,7 +168,9 @@ export default function Dashboard() {
               {loading ? <Spinner text="Loading chart..." /> : feedingData.length === 0 ? (
                 <div className="empty-state" style={{ padding: '30px' }}>
                   <p>No feeding data yet</p>
-                  <Link to="/feeding-records" className="btn btn-primary btn-sm" style={{ marginTop: '8px' }}>Add Feeding Records</Link>
+                  <Link to="/feeding-records" className="btn btn-primary btn-sm" style={{ marginTop: '8px' }}>
+                    Add Feeding Records
+                  </Link>
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
@@ -169,7 +179,8 @@ export default function Dashboard() {
                     <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(v) => [`PKR ${v.toLocaleString()}`, 'Cost']} />
-                    <Line type="monotone" dataKey="cost" stroke="#2d6a4f" strokeWidth={2.5} dot={{ fill: '#2d6a4f', r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="cost" stroke="#2d6a4f" strokeWidth={2.5}
+                      dot={{ fill: '#2d6a4f', r: 4 }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -179,7 +190,9 @@ export default function Dashboard() {
           <div className="card">
             <div className="card-header">
               <h3>Recent Animals</h3>
-              <Link to="/my-animals" style={{ fontSize: '0.82rem', color: 'var(--primary)', textDecoration: 'none' }}>View all →</Link>
+              <Link to="/my-animals" style={{ fontSize: '0.82rem', color: 'var(--primary)', textDecoration: 'none' }}>
+                View all →
+              </Link>
             </div>
             <div style={{ padding: 0, overflowX: 'auto' }}>
               {loading ? <Spinner text="Loading..." /> : recentAnimals.length === 0 ? (
@@ -199,7 +212,11 @@ export default function Dashboard() {
                           <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>#{a.tagId}</div>
                         </td>
                         <td><span className={`badge ${speciesBadge(a.species)}`}>{a.species}</span></td>
-                        <td><span className={`badge ${a.status === 'Healthy' ? 'badge-green' : a.status === 'Sick' ? 'badge-red' : 'badge-orange'}`}>{a.status}</span></td>
+                        <td>
+                          <span className={`badge ${a.status === 'Healthy' ? 'badge-green' : a.status === 'Sick' ? 'badge-red' : 'badge-orange'}`}>
+                            {a.status}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -209,20 +226,59 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Recent Vaccinations */}
+        <div className="card" style={{ marginBottom: '24px' }}>
+          <div className="card-header">
+            <h3>💉 Recent Vaccinations</h3>
+            <Link to="/vaccination-records" style={{ fontSize: '0.82rem', color: 'var(--primary)', textDecoration: 'none' }}>
+              View all →
+            </Link>
+          </div>
+          <div style={{ padding: 0, overflowX: 'auto' }}>
+            {loading ? <Spinner text="Loading..." /> : recentVaccinations.length === 0 ? (
+              <div className="empty-state" style={{ padding: '30px' }}>
+                <div className="icon">💉</div>
+                <p>No vaccinations recorded yet</p>
+                <Link to="/vaccination-records" className="btn btn-primary btn-sm">Add Vaccination</Link>
+              </div>
+            ) : (
+              <table style={{ minWidth: '400px' }}>
+                <thead>
+                  <tr><th>Animal</th><th>Vaccine / Medicine</th><th>Date</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {recentVaccinations.map(v => (
+                    <tr key={v._id}>
+                      <td>
+                        <strong>{v.animal?.name || v.animal?.tagId || '—'}</strong>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{v.animal?.species}</div>
+                      </td>
+                      <td>{v.vaccineName}</td>
+                      <td>{v.date ? new Date(v.date).toLocaleDateString() : '—'}</td>
+                      <td><span className={`badge ${vaccStatusMap[v.status]}`}>{v.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="card">
           <div className="card-header"><h3>⚡ Quick Actions</h3></div>
           <div className="card-body" style={{ padding: '16px' }}>
             <div className="quick-actions-grid">
               {[
-                { to: '/my-animals',       icon: '🐄', label: 'My Animals',    desc: 'Manage livestock' },
-                { to: '/cattle',           icon: '🏪', label: 'Cattle Market', desc: 'Buy & sell'       },
-                { to: '/breeding-records', icon: '🧬', label: 'Breeding',      desc: 'Track pairs'      },
-                { to: '/feeding-records',  icon: '🌾', label: 'Feeding',       desc: 'Log feed'         },
-                { to: '/animal-progress',  icon: '📈', label: 'Progress',      desc: 'Track growth'     },
-                { to: '/installments',     icon: '💳', label: 'Installments',  desc: 'Payments'         },
-                { to: '/vouchers',         icon: '🧾', label: 'Vouchers',      desc: 'Finance'          },
-                { to: '/profile',          icon: '👤', label: 'Profile',       desc: 'Account'          },
+                { to: '/my-animals',           icon: '🐄', label: 'My Animals',    desc: 'Manage livestock' },
+                { to: '/cattle',               icon: '🏪', label: 'Cattle Market', desc: 'Buy & sell'       },
+                { to: '/breeding-records',     icon: '🧬', label: 'Breeding',      desc: 'Track pairs'      },
+                { to: '/feeding-records',      icon: '🌾', label: 'Feeding',       desc: 'Log feed'         },
+                { to: '/animal-progress',      icon: '📈', label: 'Progress',      desc: 'Track growth'     },
+                { to: '/vaccination-records',  icon: '💉', label: 'Vaccinations',  desc: 'Medicines'        },
+                { to: '/installments',         icon: '💳', label: 'Installments',  desc: 'Payments'         },
+                { to: '/vouchers',             icon: '🧾', label: 'Vouchers',      desc: 'Finance'          },
+                { to: '/profile',              icon: '👤', label: 'Profile',       desc: 'Account'          },
               ].map(link => (
                 <Link key={link.to} to={link.to} style={{ textDecoration: 'none' }}>
                   <div className="quick-action-card">

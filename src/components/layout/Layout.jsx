@@ -12,6 +12,7 @@ const navItems = [
     { path: '/breeding-records', label: 'Breeding Records',  icon: '🧬' },
     { path: '/feeding-records',  label: 'Feeding Records',   icon: '🌾' },
     { path: '/animal-progress',  label: 'Animal Progress',   icon: '📈' },
+    { path: '/vaccination-records', label: 'Vaccinations', icon: '💉' },
   ]},
   { section: 'Marketplace', items: [
     { path: '/cattle', label: 'Cattle Market', icon: '🏪' },

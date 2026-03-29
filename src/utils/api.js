@@ -83,5 +83,10 @@ export const enquiryAPI = {
   sent:     ()           => API.get('/enquiries/sent'),
   update:   (id, status) => API.patch(`/enquiries/${id}/status`, { status }),
 };
-
+export const vaccinationAPI = {
+  getAll:  (params)   => API.get('/vaccinations', { params }),
+  create:  (data)     => API.post('/vaccinations', data),
+  update:  (id, data) => API.put(`/vaccinations/${id}`, data),
+  delete:  (id)       => API.delete(`/vaccinations/${id}`),
+};
 export default API;

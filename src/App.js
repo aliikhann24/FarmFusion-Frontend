@@ -14,6 +14,7 @@ import CattleMarket from './pages/cattle/CattleMarket';
 import BreedingRecords from './pages/records/BreedingRecords';
 import FeedingRecords from './pages/records/FeedingRecords';
 import AnimalProgress from './pages/records/AnimalProgress';
+import VaccinationRecords from './pages/records/VaccinationRecords';
 import Installments from './pages/vouchers/Installments';
 import Vouchers from './pages/vouchers/Vouchers';
 import Profile from './pages/profile/Profile';
