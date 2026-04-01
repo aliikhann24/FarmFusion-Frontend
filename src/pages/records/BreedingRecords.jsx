@@ -9,13 +9,16 @@ const defaultForm = {
 };
 
 export default function BreedingRecords() {
-  const [records, setRecords]     = useState([]);
-  const [animals, setAnimals]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [records, setRecords]       = useState([]);
+  const [animals, setAnimals]       = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [showModal, setShowModal]   = useState(false);
   const [editRecord, setEditRecord] = useState(null);
-  const [form, setForm]           = useState(defaultForm);
-  const [saving, setSaving]       = useState(false);
+  const [form, setForm]             = useState(defaultForm);
+  const [saving, setSaving]         = useState(false);
+  const [search, setSearch]         = useState('');
+  const [filterOutcome, setFilterOutcome] = useState('');
+  const [filterAnimal, setFilterAnimal]   = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -32,11 +35,18 @@ export default function BreedingRecords() {
 
   useEffect(() => { load(); }, []);
 
-  const openAdd = () => {
-    setEditRecord(null);
-    setForm(defaultForm);
-    setShowModal(true);
-  };
+  // ✅ Client-side filtering
+  const filtered = records.filter(r => {
+    const femaleName = (r.femaleAnimal?.name || r.femaleAnimal?.tagId || '').toLowerCase();
+    const maleName   = (r.maleAnimal?.name   || r.maleAnimal?.tagId   || '').toLowerCase();
+    const species    = (r.femaleAnimal?.species || '').toLowerCase();
+    const matchSearch  = !search       || femaleName.includes(search.toLowerCase()) || maleName.includes(search.toLowerCase()) || species.includes(search.toLowerCase());
+    const matchOutcome = !filterOutcome || r.outcome === filterOutcome;
+    const matchAnimal  = !filterAnimal  || r.femaleAnimal?._id === filterAnimal || r.maleAnimal?._id === filterAnimal;
+    return matchSearch && matchOutcome && matchAnimal;
+  });
+
+  const openAdd = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
 
   const openEdit = (r) => {
     setEditRecord(r);
@@ -51,11 +61,7 @@ export default function BreedingRecords() {
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditRecord(null);
-    setForm(defaultForm);
-  };
+  const closeModal = () => { setShowModal(false); setEditRecord(null); setForm(defaultForm); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,7 +98,7 @@ export default function BreedingRecords() {
   const females = animals.filter(a => a.gender === 'Female');
   const males   = animals.filter(a => a.gender === 'Male');
 
- return (
+  return (
     <div className="page-breeding">
       <div className="page-header">
         <div><h2>🧬 Breeding Records</h2><p>Track animal breeding history</p></div>
@@ -117,15 +123,66 @@ export default function BreedingRecords() {
           ))}
         </div>
 
+        {/* ✅ Search + Filters */}
+        <div className="filter-bar">
+          <input
+            className="search-input"
+            placeholder="🔍 Search by animal name, tag or species..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <select
+            className="search-input"
+            style={{ flex: 'none', width: 'auto', minWidth: '160px' }}
+            value={filterAnimal}
+            onChange={e => setFilterAnimal(e.target.value)}
+          >
+            <option value="">All Animals</option>
+            {animals.map(a => (
+              <option key={a._id} value={a._id}>
+                {a.name || a.tagId} ({a.species})
+              </option>
+            ))}
+          </select>
+          <select
+            className="search-input"
+            style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
+            value={filterOutcome}
+            onChange={e => setFilterOutcome(e.target.value)}
+          >
+            <option value="">All Outcomes</option>
+            {['Pending', 'Successful', 'Failed', 'Miscarriage'].map(o => (
+              <option key={o}>{o}</option>
+            ))}
+          </select>
+          {(search || filterAnimal || filterOutcome) && (
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => { setSearch(''); setFilterAnimal(''); setFilterOutcome(''); }}
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
+
+        {/* Results count */}
+        {(search || filterAnimal || filterOutcome) && (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+            Showing {filtered.length} of {records.length} records
+          </p>
+        )}
+
         <div className="card">
           {loading ? (
             <div className="empty-state"><p>Loading...</p></div>
-          ) : records.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="empty-state">
               <div className="icon">🧬</div>
-              <h3>No breeding records</h3>
-              <p>Start tracking your animals' breeding history</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
+              <h3>{records.length === 0 ? 'No breeding records' : 'No results found'}</h3>
+              <p>{records.length === 0 ? "Start tracking your animals' breeding history" : 'Try adjusting your search or filters'}</p>
+              {records.length === 0 && (
+                <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
+              )}
             </div>
           ) : (
             <div className="table-container">
@@ -138,7 +195,7 @@ export default function BreedingRecords() {
                   </tr>
                 </thead>
                 <tbody>
-                  {records.map(r => (
+                  {filtered.map(r => (
                     <tr key={r._id}>
                       <td>
                         <strong>{r.femaleAnimal?.name || r.femaleAnimal?.tagId || '—'}</strong>

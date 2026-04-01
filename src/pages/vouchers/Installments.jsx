@@ -17,6 +17,9 @@ export default function Installments() {
   const [payAmount, setPayAmount]       = useState('');
   const [payNote, setPayNote]           = useState('');
   const [saving, setSaving]             = useState(false);
+  const [search, setSearch]             = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterFreq, setFilterFreq]     = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -29,30 +32,30 @@ export default function Installments() {
 
   useEffect(() => { load(); }, []);
 
-  const openAdd = () => {
-    setEditRecord(null);
-    setForm(defaultForm);
-    setShowModal(true);
-  };
+  // ✅ Client-side filtering
+  const filtered = installments.filter(i => {
+    const matchSearch = !search       || i.title.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !filterStatus || i.status === filterStatus;
+    const matchFreq   = !filterFreq   || i.frequency === filterFreq;
+    return matchSearch && matchStatus && matchFreq;
+  });
+
+  const openAdd = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
 
   const openEdit = (i) => {
     setEditRecord(i);
     setForm({
-      title:               i.title || '',
-      totalAmount:         i.totalAmount || '',
-      installmentAmount:   i.installmentAmount || '',
-      frequency:           i.frequency || 'Monthly',
-      startDate:           i.startDate ? i.startDate.split('T')[0] : '',
-      dueDate:             i.dueDate   ? i.dueDate.split('T')[0]   : '',
+      title:             i.title || '',
+      totalAmount:       i.totalAmount || '',
+      installmentAmount: i.installmentAmount || '',
+      frequency:         i.frequency || 'Monthly',
+      startDate:         i.startDate ? i.startDate.split('T')[0] : '',
+      dueDate:           i.dueDate   ? i.dueDate.split('T')[0]   : '',
     });
     setShowModal(true);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setEditRecord(null);
-    setForm(defaultForm);
-  };
+  const closeModal = () => { setShowModal(false); setEditRecord(null); setForm(defaultForm); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -133,15 +136,64 @@ export default function Installments() {
           ))}
         </div>
 
+        {/* ✅ Search + Filters */}
+        <div className="filter-bar">
+          <input
+            className="search-input"
+            placeholder="🔍 Search by plan title..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <select
+            className="search-input"
+            style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+          >
+            <option value="">All Status</option>
+            {['Active', 'Completed', 'Overdue', 'Cancelled'].map(s => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <select
+            className="search-input"
+            style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
+            value={filterFreq}
+            onChange={e => setFilterFreq(e.target.value)}
+          >
+            <option value="">All Frequencies</option>
+            {['Weekly', 'Monthly', 'Quarterly'].map(f => (
+              <option key={f}>{f}</option>
+            ))}
+          </select>
+          {(search || filterStatus || filterFreq) && (
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => { setSearch(''); setFilterStatus(''); setFilterFreq(''); }}
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
+
+        {/* Results count */}
+        {(search || filterStatus || filterFreq) && (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+            Showing {filtered.length} of {installments.length} plans
+          </p>
+        )}
+
         <div className="card">
           {loading ? (
             <div className="empty-state"><p>Loading...</p></div>
-          ) : installments.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="empty-state">
               <div className="icon">💳</div>
-              <h3>No installment plans</h3>
-              <p>Create a plan to start tracking payments</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Create Plan</button>
+              <h3>{installments.length === 0 ? 'No installment plans' : 'No results found'}</h3>
+              <p>{installments.length === 0 ? 'Create a plan to start tracking payments' : 'Try adjusting your search or filters'}</p>
+              {installments.length === 0 && (
+                <button className="btn btn-primary" onClick={openAdd}>+ Create Plan</button>
+              )}
             </div>
           ) : (
             <div className="table-container">
@@ -154,7 +206,7 @@ export default function Installments() {
                   </tr>
                 </thead>
                 <tbody>
-                  {installments.map(i => {
+                  {filtered.map(i => {
                     const remaining = Math.max(0, i.totalAmount - i.paidAmount);
                     const progress  = Math.min(100, Math.round((i.paidAmount / i.totalAmount) * 100));
                     return (
@@ -268,9 +320,7 @@ export default function Installments() {
             </div>
             <div className="modal-body">
               <div style={{ background: '#f4faf5', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  {showPayModal.title}
-                </div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{showPayModal.title}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Paid so far</div>
