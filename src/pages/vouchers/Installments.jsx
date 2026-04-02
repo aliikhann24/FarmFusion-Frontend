@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { installmentsAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const defaultForm = {
   title: '', totalAmount: '', installmentAmount: '',
@@ -117,6 +118,7 @@ export default function Installments() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Plans',     value: totalPlans,                               icon: '💳', cls: 'blue'   },

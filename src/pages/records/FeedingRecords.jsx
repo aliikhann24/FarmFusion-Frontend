@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { feedingAPI, animalsAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const defaultForm = {
   animal: '', feedType: '', quantity: '', unit: 'kg',
@@ -98,6 +99,7 @@ export default function FeedingRecords() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records',    value: totalRecords,               icon: '🌾', cls: 'green'  },

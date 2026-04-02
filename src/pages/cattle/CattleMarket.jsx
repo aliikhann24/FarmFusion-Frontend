@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { cattleAPI, enquiryAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
+import QuickNav from '../../components/common/QuickNav';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 
@@ -402,6 +403,7 @@ export default function CattleMarket() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
 
         {/* ===== MARKETPLACE TAB ===== */}
         {activeTab === 'market' && (

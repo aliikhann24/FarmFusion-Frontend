@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { animalsAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 const STATUSES = ['Healthy', 'Sick', 'Pregnant', 'Sold', 'Deceased'];
@@ -95,6 +96,7 @@ export default function MyAnimals() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
         <div className="filter-bar">
           <input className="search-input" placeholder="🔍 Search by name or tag ID..."
             value={search} onChange={e => setSearch(e.target.value)} />
@@ -234,7 +236,10 @@ export default function MyAnimals() {
             </div>
           </div>
         </div>
+        
       )}
+      
     </div>
+    
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { vaccinationAPI, animalsAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const VACCINE_TYPES = ['Vaccine', 'Medicine', 'Antibiotic', 'Supplement', 'Other'];
 const STATUSES = ['Given', 'Scheduled', 'Overdue'];
@@ -124,6 +125,7 @@ export default function VaccinationRecords() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
 
         {/* Stats */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>

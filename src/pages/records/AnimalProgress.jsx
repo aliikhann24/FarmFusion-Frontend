@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { progressAPI, animalsAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const defaultForm = {
   animal: '',
@@ -206,6 +207,7 @@ export default function AnimalProgress() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
 
         {/* Stats */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>

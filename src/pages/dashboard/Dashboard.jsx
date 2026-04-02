@@ -8,6 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   LineChart, Line
 } from 'recharts';
+import QuickNav from '../../components/common/QuickNav';
 
 const COLORS = ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#95d5b2', '#d8f3dc'];
 
@@ -90,6 +91,7 @@ export default function Dashboard() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
 
         {/* Stats Cards */}
         <div className="stats-grid">

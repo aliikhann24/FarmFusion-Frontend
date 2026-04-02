@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { breedingAPI, animalsAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const defaultForm = {
   femaleAnimal: '', maleAnimal: '',
@@ -106,6 +107,7 @@ export default function BreedingRecords() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records', value: records.length,                                         icon: '🧬', cls: 'purple' },

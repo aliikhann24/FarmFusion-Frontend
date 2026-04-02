@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -60,6 +61,7 @@ export default function Profile() {
         <div><h2>👤 My Profile</h2><p>Manage your account details</p></div>
       </div>
       <div className="page-content">
+        <QuickNav></QuickNav>
         <div className="profile-grid">
 
           {/* Left — Avatar Card */}

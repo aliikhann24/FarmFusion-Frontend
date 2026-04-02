@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { vouchersAPI } from '../../utils/api';
+import QuickNav from '../../components/common/QuickNav';
 
 const defaultForm = {
   type: 'Purchase', amount: '',
@@ -95,6 +96,7 @@ export default function Vouchers() {
       </div>
 
       <div className="page-content">
+        <QuickNav></QuickNav>
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Vouchers', value: vouchers.length,                      icon: '🧾', cls: 'blue',   big: false },
