@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { installmentsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 
 const defaultForm = {
   title: '', totalAmount: '', installmentAmount: '',
@@ -21,6 +23,7 @@ export default function Installments() {
   const [search, setSearch]             = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterFreq, setFilterFreq]     = useState('');
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -91,14 +94,20 @@ export default function Installments() {
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this installment plan?')) return;
-    try {
-      await installmentsAPI.delete(id);
-      toast.success('Deleted');
-      load();
-    } catch { toast.error('Failed to delete'); }
-  };
+  
+const handleDelete = async (id) => {
+  const ok = await confirm({
+    title: 'Delete Installment Plan?',
+    message: 'This payment plan and all its records will be permanently deleted.',
+    confirmText: 'Yes, Delete', type: 'danger'
+  });
+  if (!ok) return;
+  try {
+    await installmentsAPI.delete(id);
+    toast.success('Deleted');
+    load();
+  } catch { toast.error('Failed to delete'); }
+};
 
   const statusMap = {
     Active: 'badge-blue', Completed: 'badge-green',
@@ -360,6 +369,16 @@ export default function Installments() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  isOpen={confirmState.isOpen}
+  title={confirmState.title}
+  message={confirmState.message}
+  confirmText={confirmState.confirmText}
+  cancelText={confirmState.cancelText}
+  type={confirmState.type}
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
     </div>
   );
 }

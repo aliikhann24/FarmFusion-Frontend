@@ -3,6 +3,8 @@ import { toast } from 'react-toastify';
 import { cattleAPI, enquiryAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 import QuickNav from '../../components/common/QuickNav';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 
@@ -68,6 +70,8 @@ export default function CattleMarket() {
   const prevSentRef = useRef([]);
   const pollRef     = useRef(null);
   const imageRef    = useRef();
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
+
 
   useEffect(() => {
     if (user) {
@@ -199,14 +203,19 @@ export default function CattleMarket() {
   };
 
   const handleDeleteListing = async (id) => {
-    if (!window.confirm('Remove this listing from marketplace?')) return;
-    try {
-      await cattleAPI.delete(id);
-      toast.success('Listing removed');
-      setViewAnimal(null);
-      load();
-    } catch { toast.error('Failed to remove listing'); }
-  };
+  const ok = await confirm({
+    title: 'Remove Listing?',
+    message: 'This animal will be removed from the marketplace.',
+    confirmText: 'Yes, Remove', type: 'warning'
+  });
+  if (!ok) return;
+  try {
+    await cattleAPI.delete(id);
+    toast.success('Listing removed');
+    setViewAnimal(null);
+    load();
+  } catch { toast.error('Failed to remove listing'); }
+};
 
   const handleEnquirySubmit = async (e) => {
     e.preventDefault();
@@ -828,6 +837,16 @@ export default function CattleMarket() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  isOpen={confirmState.isOpen}
+  title={confirmState.title}
+  message={confirmState.message}
+  confirmText={confirmState.confirmText}
+  cancelText={confirmState.cancelText}
+  type={confirmState.type}
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
     </div>
   );
 }

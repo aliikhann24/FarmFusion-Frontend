@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { breedingAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 
 const defaultForm = {
   femaleAnimal: '', maleAnimal: '',
@@ -20,6 +22,7 @@ export default function BreedingRecords() {
   const [search, setSearch]         = useState('');
   const [filterOutcome, setFilterOutcome] = useState('');
   const [filterAnimal, setFilterAnimal]   = useState('');
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -82,15 +85,24 @@ export default function BreedingRecords() {
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this record?')) return;
-    try {
-      await breedingAPI.delete(id);
-      toast.success('Deleted');
-      load();
-    } catch { toast.error('Failed to delete'); }
-  };
+ const handleDelete = async (id) => {
+  const ok = await confirm({
+    title: 'Delete Breeding Record?',
+    message: 'This breeding history record will be permanently deleted.',
+    confirmText: 'Yes, Delete',
+    type: 'danger'
+  });
 
+  if (!ok) return;
+
+  try {
+    await breedingAPI.delete(id);
+    toast.success('Breeding record deleted');
+    load();
+  } catch {
+    toast.error('Failed to delete');
+  }
+};
   const outcomeMap = {
     Pending: 'badge-orange', Successful: 'badge-green',
     Failed: 'badge-red', Miscarriage: 'badge-red'
@@ -292,6 +304,17 @@ export default function BreedingRecords() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  isOpen={confirmState.isOpen}
+  title={confirmState.title}
+  message={confirmState.message}
+  confirmText={confirmState.confirmText}
+  cancelText={confirmState.cancelText}
+  type={confirmState.type}
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
     </div>
+    
   );
 }

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { vaccinationAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
-
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 const VACCINE_TYPES = ['Vaccine', 'Medicine', 'Antibiotic', 'Supplement', 'Other'];
 const STATUSES = ['Given', 'Scheduled', 'Overdue'];
 
@@ -21,6 +22,7 @@ export default function VaccinationRecords() {
   const [form, setForm]             = useState(defaultForm);
   const [saving, setSaving]         = useState(false);
   const [filterAnimal, setFilterAnimal] = useState('');
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -80,14 +82,19 @@ export default function VaccinationRecords() {
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this record?')) return;
-    try {
-      await vaccinationAPI.delete(id);
-      toast.success('Deleted');
-      load();
-    } catch { toast.error('Failed to delete'); }
-  };
+ const handleDelete = async (id) => {
+  const ok = await confirm({
+    title: 'Delete Vaccination Record?',
+    message: 'This vaccination entry will be permanently removed.',
+    confirmText: 'Yes, Delete', type: 'danger'
+  });
+  if (!ok) return;
+  try {
+    await vaccinationAPI.delete(id);
+    toast.success('Deleted');
+    load();
+  } catch { toast.error('Failed to delete'); }
+};
 
   const closeModal = () => {
     setShowModal(false);
@@ -349,6 +356,16 @@ export default function VaccinationRecords() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  isOpen={confirmState.isOpen}
+  title={confirmState.title}
+  message={confirmState.message}
+  confirmText={confirmState.confirmText}
+  cancelText={confirmState.cancelText}
+  type={confirmState.type}
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
     </div>
   );
 }

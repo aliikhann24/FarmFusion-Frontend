@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { vouchersAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 
 const defaultForm = {
   type: 'Purchase', amount: '',
@@ -16,6 +18,8 @@ export default function Vouchers() {
   const [form, setForm]             = useState(defaultForm);
   const [saving, setSaving]         = useState(false);
   const [filterType, setFilterType] = useState('');
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
+
 
   const load = async () => {
     setLoading(true);
@@ -70,13 +74,18 @@ export default function Vouchers() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this voucher?')) return;
-    try {
-      await vouchersAPI.delete(id);
-      toast.success('Deleted');
-      load();
-    } catch { toast.error('Failed to delete'); }
-  };
+  const ok = await confirm({
+    title: 'Delete Voucher?',
+    message: 'This financial record will be permanently deleted.',
+    confirmText: 'Yes, Delete', type: 'danger'
+  });
+  if (!ok) return;
+  try {
+    await vouchersAPI.delete(id);
+    toast.success('Deleted');
+    load();
+  } catch { toast.error('Failed to delete'); }
+};
 
   const isIncome = (type) => ['Sale', 'Income'].includes(type);
   const typeMap  = {
@@ -232,6 +241,16 @@ export default function Vouchers() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  isOpen={confirmState.isOpen}
+  title={confirmState.title}
+  message={confirmState.message}
+  confirmText={confirmState.confirmText}
+  cancelText={confirmState.cancelText}
+  type={confirmState.type}
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
     </div>
   );
 }

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { feedingAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
-
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 const defaultForm = {
   animal: '', feedType: '', quantity: '', unit: 'kg',
   feedingDate: new Date().toISOString().split('T')[0], cost: '', notes: ''
@@ -17,6 +18,7 @@ export default function FeedingRecords() {
   const [form, setForm]             = useState(defaultForm);
   const [saving, setSaving]         = useState(false);
   const [filterAnimal, setFilterAnimal] = useState('');
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -77,14 +79,24 @@ export default function FeedingRecords() {
     } finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this record?')) return;
-    try {
-      await feedingAPI.delete(id);
-      toast.success('Deleted');
-      load();
-    } catch { toast.error('Failed to delete'); }
-  };
+ const handleDelete = async (id) => {
+  const ok = await confirm({
+    title: 'Delete Feeding Record?',
+    message: 'This feeding record will be permanently deleted.',
+    confirmText: 'Yes, Delete',
+    type: 'danger'
+  });
+
+  if (!ok) return;
+
+  try {
+    await feedingAPI.delete(id);
+    toast.success('Feeding record deleted');
+    load();
+  } catch {
+    toast.error('Failed to delete');
+  }
+};
 
   const totalCost     = records.reduce((sum, r) => sum + (r.cost || 0), 0);
   const totalRecords  = records.length;
@@ -249,6 +261,16 @@ export default function FeedingRecords() {
           </div>
         </div>
       )}
+      <ConfirmModal
+  isOpen={confirmState.isOpen}
+  title={confirmState.title}
+  message={confirmState.message}
+  confirmText={confirmState.confirmText}
+  cancelText={confirmState.cancelText}
+  type={confirmState.type}
+  onConfirm={handleConfirm}
+  onCancel={handleCancel}
+/>
     </div>
   );
 }

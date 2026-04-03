@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import useConfirm from '../../hooks/UseConfirm';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 const STATUSES = ['Healthy', 'Sick', 'Pregnant', 'Sold', 'Deceased'];
@@ -13,14 +15,15 @@ const defaultForm = {
 };
 
 export default function MyAnimals() {
-  const [animals, setAnimals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editAnimal, setEditAnimal] = useState(null);
-  const [form, setForm] = useState(defaultForm);
-  const [search, setSearch] = useState('');
+  const [animals, setAnimals]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [showModal, setShowModal]     = useState(false);
+  const [editAnimal, setEditAnimal]   = useState(null);
+  const [form, setForm]               = useState(defaultForm);
+  const [search, setSearch]           = useState('');
   const [filterSpecies, setFilterSpecies] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = async () => {
     setLoading(true);
@@ -33,17 +36,13 @@ export default function MyAnimals() {
 
   useEffect(() => { load(); }, [search, filterSpecies]);
 
-  const openAdd = () => { setEditAnimal(null); setForm(defaultForm); setShowModal(true); };
-
+  const openAdd  = () => { setEditAnimal(null); setForm(defaultForm); setShowModal(true); };
   const openEdit = (animal) => {
     setEditAnimal(animal);
     setForm({
-      tagId:         animal.tagId || '',
-      name:          animal.name || '',
-      species:       animal.species,
-      breed:         animal.breed || '',
-      gender:        animal.gender,
-      color:         animal.color || '',
+      tagId: animal.tagId || '', name: animal.name || '',
+      species: animal.species, breed: animal.breed || '',
+      gender: animal.gender, color: animal.color || '',
       dateOfBirth:   animal.dateOfBirth   ? animal.dateOfBirth.split('T')[0]   : '',
       weight:        animal.weight || '',
       status:        animal.status,
@@ -75,7 +74,13 @@ export default function MyAnimals() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this animal?')) return;
+    const ok = await confirm({
+      title: 'Delete Animal?',
+      message: 'This animal and all its records will be permanently deleted from your farm.',
+      confirmText: 'Yes, Delete',
+      type: 'danger'
+    });
+    if (!ok) return;
     try {
       await animalsAPI.delete(id);
       toast.success('Animal deleted');
@@ -96,7 +101,7 @@ export default function MyAnimals() {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
         <div className="filter-bar">
           <input className="search-input" placeholder="🔍 Search by name or tag ID..."
             value={search} onChange={e => setSearch(e.target.value)} />
@@ -236,10 +241,18 @@ export default function MyAnimals() {
             </div>
           </div>
         </div>
-        
       )}
-      
+
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
-    
   );
 }
