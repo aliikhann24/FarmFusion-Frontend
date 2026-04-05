@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 
@@ -55,11 +56,11 @@ export default function CattleMarket() {
   const [showModal, setShowModal]               = useState(false);
   const [editListing, setEditListing]           = useState(null);
   const [showEnquiryModal, setShowEnquiryModal] = useState(null);
-  const [viewAnimal, setViewAnimal]             = useState(null); // ✅ detail view
+  const [viewAnimal, setViewAnimal]             = useState(null);
   const [form, setForm]                         = useState(defaultForm);
   const [enquiryForm, setEnquiryForm]           = useState(defaultEnquiry);
   const [enquiries, setEnquiries]               = useState([]);
-  const [sentEnquiries, setSentEnquiries]       = useState([]); // ✅ buyer's sent enquiries
+  const [sentEnquiries, setSentEnquiries]       = useState([]);
   const [imagePreview, setImagePreview]         = useState(null);
   const [compressing, setCompressing]           = useState(false);
   const [search, setSearch]                     = useState('');
@@ -71,7 +72,6 @@ export default function CattleMarket() {
   const pollRef     = useRef(null);
   const imageRef    = useRef();
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
-
 
   useEffect(() => {
     if (user) {
@@ -96,7 +96,6 @@ export default function CattleMarket() {
     } catch {}
   };
 
-  // ✅ Load sent enquiries and notify buyer if status changed
   const loadSentEnquiries = async (notify = false) => {
     try {
       const { data } = await enquiryAPI.sent();
@@ -126,7 +125,7 @@ export default function CattleMarket() {
     loadSentEnquiries(false);
     pollRef.current = setInterval(() => {
       loadEnquiries();
-      loadSentEnquiries(true); // ✅ notify buyer on every poll
+      loadSentEnquiries(true);
     }, 30000);
     return () => clearInterval(pollRef.current);
   }, []);
@@ -203,19 +202,19 @@ export default function CattleMarket() {
   };
 
   const handleDeleteListing = async (id) => {
-  const ok = await confirm({
-    title: 'Remove Listing?',
-    message: 'This animal will be removed from the marketplace.',
-    confirmText: 'Yes, Remove', type: 'warning'
-  });
-  if (!ok) return;
-  try {
-    await cattleAPI.delete(id);
-    toast.success('Listing removed');
-    setViewAnimal(null);
-    load();
-  } catch { toast.error('Failed to remove listing'); }
-};
+    const ok = await confirm({
+      title: 'Remove Listing?',
+      message: 'This animal will be removed from the marketplace.',
+      confirmText: 'Yes, Remove', type: 'warning'
+    });
+    if (!ok) return;
+    try {
+      await cattleAPI.delete(id);
+      toast.success('Listing removed');
+      setViewAnimal(null);
+      load();
+    } catch { toast.error('Failed to remove listing'); }
+  };
 
   const handleEnquirySubmit = async (e) => {
     e.preventDefault();
@@ -268,8 +267,6 @@ export default function CattleMarket() {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body" style={{ padding: 0 }}>
-
-          {/* Image */}
           {animal.imageBase64 ? (
             <img
               src={`data:${animal.imageMimeType || 'image/jpeg'};base64,${animal.imageBase64}`}
@@ -285,7 +282,6 @@ export default function CattleMarket() {
           )}
 
           <div style={{ padding: '20px 24px 24px' }}>
-            {/* Title + badges */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
               <div>
                 <h2 style={{ fontSize: '1.4rem', color: 'var(--primary-dark)', marginBottom: '4px' }}>
@@ -299,7 +295,6 @@ export default function CattleMarket() {
               </div>
             </div>
 
-            {/* Details grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
               {[
                 { label: 'Breed',    value: animal.breed    || '—' },
@@ -316,7 +311,6 @@ export default function CattleMarket() {
               ))}
             </div>
 
-            {/* Description */}
             {animal.description && (
               <div style={{ background: '#f4faf5', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>Description</div>
@@ -324,7 +318,6 @@ export default function CattleMarket() {
               </div>
             )}
 
-            {/* Price + Seller */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
               <div>
                 <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)' }}>
@@ -337,7 +330,6 @@ export default function CattleMarket() {
               </div>
             </div>
 
-            {/* Actions */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {isMyListing(animal) ? (
                 <>
@@ -379,7 +371,6 @@ export default function CattleMarket() {
       <div className="page-header">
         <div><h2>🏪 Cattle Marketplace</h2><p>Buy & sell livestock</p></div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* My Sent Enquiries button for buyers */}
           <button className="btn btn-outline btn-sm" style={{ position: 'relative' }}
             onClick={() => setActiveTab(activeTab === 'my-enquiries' ? 'market' : 'my-enquiries')}>
             {activeTab === 'my-enquiries' ? '🏪 Market' : '📋 My Offers'}
@@ -393,7 +384,6 @@ export default function CattleMarket() {
               }}>{pendingSent}</span>
             )}
           </button>
-          {/* Received Enquiries for sellers */}
           <button className="btn btn-outline btn-sm" style={{ position: 'relative' }}
             onClick={() => setActiveTab(activeTab === 'enquiries' ? 'market' : 'enquiries')}>
             {activeTab === 'enquiries' ? '🏪 Market' : '📬 Enquiries'}
@@ -412,20 +402,23 @@ export default function CattleMarket() {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
 
         {/* ===== MARKETPLACE TAB ===== */}
         {activeTab === 'market' && (
           <>
-            <div className="filter-bar">
-              <input className="search-input" placeholder="🔍 Search by name, breed or location..."
-                value={search} onChange={e => setSearch(e.target.value)} />
-              <select className="search-input" style={{ flex: 'none', width: 'auto' }}
-                value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
-                <option value="">All Species</option>
-                {SPECIES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
+            {/* ===== FILTER BAR — animate from left ===== */}
+            <Animate direction="left">
+              <div className="filter-bar">
+                <input className="search-input" placeholder="🔍 Search by name, breed or location..."
+                  value={search} onChange={e => setSearch(e.target.value)} />
+                <select className="search-input" style={{ flex: 'none', width: 'auto' }}
+                  value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
+                  <option value="">All Species</option>
+                  {SPECIES.map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+            </Animate>
 
             {loading ? (
               <div className="empty-state"><p>Loading marketplace...</p></div>
@@ -437,82 +430,83 @@ export default function CattleMarket() {
                 <button className="btn btn-primary" onClick={openAdd}>+ List Animal</button>
               </div>
             ) : (
+              /* ===== CATTLE CARDS — staggered animate up ===== */
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                {cattle.map(c => (
-                  <div key={c._id} className="card" style={{ overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
-                    onClick={() => setViewAnimal(c)}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(45,106,79,0.18)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = ''; }}
-                  >
-                    {/* Image */}
-                    {c.imageBase64 ? (
-                      <img
-                        src={`data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}`}
-                        alt={c.name || c.species}
-                        style={{ width: '100%', height: '190px', objectFit: 'cover', display: 'block' }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: '100%', height: '130px',
-                        background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem'
-                      }}>🐄</div>
-                    )}
+                {cattle.map((c, i) => (
+                  <Animate key={c._id} direction="up" delay={i * 60}>
+                    <div className="card" style={{ overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                      onClick={() => setViewAnimal(c)}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(45,106,79,0.18)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = ''; }}
+                    >
+                      {c.imageBase64 ? (
+                        <img
+                          src={`data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}`}
+                          alt={c.name || c.species}
+                          style={{ width: '100%', height: '190px', objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '100%', height: '130px',
+                          background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem'
+                        }}>🐄</div>
+                      )}
 
-                    <div style={{ padding: '14px 16px 16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div>
-                          <h3 style={{ fontSize: '1rem', color: 'var(--primary-dark)', marginBottom: '2px' }}>
-                            {c.name || `${c.species} #${c.tagId}`}
-                          </h3>
-                          <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Tag: {c.tagId} • {c.gender}</p>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                          <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>{c.species}</span>
-                          {isMyListing(c) && <span className="badge badge-blue" style={{ fontSize: '0.62rem' }}>Mine</span>}
-                        </div>
-                      </div>
-
-                      {/* Quick info row */}
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                        {c.breed   && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.breed}</span>}
-                        {c.age     && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.age} yrs</span>}
-                        {c.weight  && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.weight} kg</span>}
-                        {c.location && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>📍{c.location}</span>}
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)' }}>
-                            PKR {Number(c.price).toLocaleString()}
+                      <div style={{ padding: '14px 16px 16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                          <div>
+                            <h3 style={{ fontSize: '1rem', color: 'var(--primary-dark)', marginBottom: '2px' }}>
+                              {c.name || `${c.species} #${c.tagId}`}
+                            </h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Tag: {c.tagId} • {c.gender}</p>
                           </div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                            {c.seller?.farmName || c.seller?.name || 'Unknown'}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                            <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>{c.species}</span>
+                            {isMyListing(c) && <span className="badge badge-blue" style={{ fontSize: '0.62rem' }}>Mine</span>}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
-                          {isMyListing(c) ? (
-                            <>
-                              <button className="btn btn-outline btn-sm" style={{ padding: '6px 10px', fontSize: '0.78rem' }} onClick={() => openEdit(c)}>✏️</button>
-                              <button className="btn btn-danger btn-sm" style={{ padding: '6px 10px', fontSize: '0.78rem' }} onClick={() => handleDeleteListing(c._id)}>🗑</button>
-                            </>
-                          ) : (
-                            <button className="btn btn-primary btn-sm" style={{ fontSize: '0.78rem' }}
-                              onClick={() => {
-                                setShowEnquiryModal(c);
-                                setEnquiryForm({ ...defaultEnquiry, buyerName: user?.name || '', buyerPhone: user?.phone || '' });
-                              }}>
-                              📬 Enquire
-                            </button>
-                          )}
-                        </div>
-                      </div>
 
-                      <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                        👆 Click card for full details
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                          {c.breed    && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.breed}</span>}
+                          {c.age      && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.age} yrs</span>}
+                          {c.weight   && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.weight} kg</span>}
+                          {c.location && <span style={{ background: '#f4faf5', borderRadius: '6px', padding: '2px 8px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>📍{c.location}</span>}
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)' }}>
+                              PKR {Number(c.price).toLocaleString()}
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                              {c.seller?.farmName || c.seller?.name || 'Unknown'}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '6px' }} onClick={e => e.stopPropagation()}>
+                            {isMyListing(c) ? (
+                              <>
+                                <button className="btn btn-outline btn-sm" style={{ padding: '6px 10px', fontSize: '0.78rem' }} onClick={() => openEdit(c)}>✏️</button>
+                                <button className="btn btn-danger btn-sm" style={{ padding: '6px 10px', fontSize: '0.78rem' }} onClick={() => handleDeleteListing(c._id)}>🗑</button>
+                              </>
+                            ) : (
+                              <button className="btn btn-primary btn-sm" style={{ fontSize: '0.78rem' }}
+                                onClick={() => {
+                                  setShowEnquiryModal(c);
+                                  setEnquiryForm({ ...defaultEnquiry, buyerName: user?.name || '', buyerPhone: user?.phone || '' });
+                                }}>
+                                📬 Enquire
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          👆 Click card for full details
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </Animate>
                 ))}
               </div>
             )}
@@ -521,146 +515,148 @@ export default function CattleMarket() {
 
         {/* ===== SELLER ENQUIRIES TAB ===== */}
         {activeTab === 'enquiries' && (
-          <div className="card">
-            <div className="card-header">
-              <h3>📬 Enquiries Received
-                {pendingEnquiries > 0 && (
-                  <span style={{ marginLeft: '8px', background: 'var(--danger)', color: 'white', borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem' }}>
-                    {pendingEnquiries} pending
-                  </span>
-                )}
-              </h3>
-              <button className="btn btn-outline btn-sm" onClick={loadEnquiries}>🔄 Refresh</button>
-            </div>
-            {enquiries.length === 0 ? (
-              <div className="empty-state" style={{ padding: '40px' }}>
-                <div className="icon">📬</div>
-                <h3>No enquiries yet</h3>
-                <p>When buyers enquire about your listings, they'll appear here</p>
+          <Animate direction="up" delay={0}>
+            <div className="card">
+              <div className="card-header">
+                <h3>📬 Enquiries Received
+                  {pendingEnquiries > 0 && (
+                    <span style={{ marginLeft: '8px', background: 'var(--danger)', color: 'white', borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem' }}>
+                      {pendingEnquiries} pending
+                    </span>
+                  )}
+                </h3>
+                <button className="btn btn-outline btn-sm" onClick={loadEnquiries}>🔄 Refresh</button>
               </div>
-            ) : (
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Animal</th><th>Buyer</th><th>Phone</th>
-                      <th>Offer</th><th>Message</th><th>Status</th><th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {enquiries.map(eq => (
-                      <tr key={eq._id}>
-                        <td>
-                          <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
-                          </div>
-                        </td>
-                        <td><strong>{eq.buyerName}</strong></td>
-                        <td>
-                          <a href={`tel:${eq.buyerPhone}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                            {eq.buyerPhone}
-                          </a>
-                        </td>
-                        <td>
-                          {eq.offerPrice
-                            ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
-                            : '—'}
-                        </td>
-                        <td style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {eq.message || '—'}
-                        </td>
-                        <td><span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {eq.status === 'Pending' && (
-                              <>
-                                <button className="btn btn-sm"
-                                  style={{ background: '#e8f5e9', color: '#2e7d32', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                                  onClick={() => handleEnquiryStatus(eq._id, 'Accepted')}>✅ Accept</button>
-                                <button className="btn btn-sm"
-                                  style={{ background: '#fde8ea', color: '#c62828', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                                  onClick={() => handleEnquiryStatus(eq._id, 'Rejected')}>❌ Reject</button>
-                              </>
-                            )}
-                            <button className="btn btn-sm"
-                              style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                              onClick={() => handleDeleteEnquiry(eq._id)}>🗑 Delete</button>
-                          </div>
-                        </td>
+              {enquiries.length === 0 ? (
+                <div className="empty-state" style={{ padding: '40px' }}>
+                  <div className="icon">📬</div>
+                  <h3>No enquiries yet</h3>
+                  <p>When buyers enquire about your listings, they'll appear here</p>
+                </div>
+              ) : (
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Animal</th><th>Buyer</th><th>Phone</th>
+                        <th>Offer</th><th>Message</th><th>Status</th><th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    </thead>
+                    <tbody>
+                      {enquiries.map(eq => (
+                        <tr key={eq._id}>
+                          <td>
+                            <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
+                            </div>
+                          </td>
+                          <td><strong>{eq.buyerName}</strong></td>
+                          <td>
+                            <a href={`tel:${eq.buyerPhone}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                              {eq.buyerPhone}
+                            </a>
+                          </td>
+                          <td>
+                            {eq.offerPrice
+                              ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
+                              : '—'}
+                          </td>
+                          <td style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {eq.message || '—'}
+                          </td>
+                          <td><span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span></td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {eq.status === 'Pending' && (
+                                <>
+                                  <button className="btn btn-sm"
+                                    style={{ background: '#e8f5e9', color: '#2e7d32', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                                    onClick={() => handleEnquiryStatus(eq._id, 'Accepted')}>✅ Accept</button>
+                                  <button className="btn btn-sm"
+                                    style={{ background: '#fde8ea', color: '#c62828', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                                    onClick={() => handleEnquiryStatus(eq._id, 'Rejected')}>❌ Reject</button>
+                                </>
+                              )}
+                              <button className="btn btn-sm"
+                                style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                                onClick={() => handleDeleteEnquiry(eq._id)}>🗑 Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </Animate>
         )}
 
         {/* ===== BUYER SENT ENQUIRIES TAB ===== */}
         {activeTab === 'my-enquiries' && (
-          <div className="card">
-            <div className="card-header">
-              <h3>📋 My Sent Enquiries</h3>
-              <button className="btn btn-outline btn-sm" onClick={() => loadSentEnquiries(false)}>🔄 Refresh</button>
-            </div>
-            {sentEnquiries.length === 0 ? (
-              <div className="empty-state" style={{ padding: '40px' }}>
-                <div className="icon">📋</div>
-                <h3>No enquiries sent yet</h3>
-                <p>Browse the marketplace and send enquiries to sellers</p>
-                <button className="btn btn-primary" onClick={() => setActiveTab('market')}>Browse Market</button>
+          <Animate direction="up" delay={0}>
+            <div className="card">
+              <div className="card-header">
+                <h3>📋 My Sent Enquiries</h3>
+                <button className="btn btn-outline btn-sm" onClick={() => loadSentEnquiries(false)}>🔄 Refresh</button>
               </div>
-            ) : (
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Animal</th><th>My Offer</th><th>My Message</th><th>Seller</th><th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sentEnquiries.map(eq => (
-                      <tr key={eq._id} style={{ background: eq.status === 'Accepted' ? '#f0fff4' : eq.status === 'Rejected' ? '#fff5f5' : undefined }}>
-                        <td>
-                          <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
-                          </div>
-                        </td>
-                        <td>
-                          {eq.offerPrice
-                            ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
-                            : '—'}
-                        </td>
-                        <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {eq.message || '—'}
-                        </td>
-                        <td>
-                          {eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}
-                        </td>
-                        <td>
-                          <div>
-                            <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
-                            {eq.status === 'Accepted' && (
-                              <div style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600, marginTop: '4px' }}>
-                                🎉 Contact the seller!
-                              </div>
-                            )}
-                            {eq.status === 'Rejected' && (
-                              <div style={{ fontSize: '0.72rem', color: 'var(--danger)', marginTop: '4px' }}>
-                                Try another listing
-                              </div>
-                            )}
-                          </div>
-                        </td>
+              {sentEnquiries.length === 0 ? (
+                <div className="empty-state" style={{ padding: '40px' }}>
+                  <div className="icon">📋</div>
+                  <h3>No enquiries sent yet</h3>
+                  <p>Browse the marketplace and send enquiries to sellers</p>
+                  <button className="btn btn-primary" onClick={() => setActiveTab('market')}>Browse Market</button>
+                </div>
+              ) : (
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Animal</th><th>My Offer</th><th>My Message</th><th>Seller</th><th>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    </thead>
+                    <tbody>
+                      {sentEnquiries.map(eq => (
+                        <tr key={eq._id} style={{ background: eq.status === 'Accepted' ? '#f0fff4' : eq.status === 'Rejected' ? '#fff5f5' : undefined }}>
+                          <td>
+                            <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
+                            </div>
+                          </td>
+                          <td>
+                            {eq.offerPrice
+                              ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
+                              : '—'}
+                          </td>
+                          <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {eq.message || '—'}
+                          </td>
+                          <td>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</td>
+                          <td>
+                            <div>
+                              <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
+                              {eq.status === 'Accepted' && (
+                                <div style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600, marginTop: '4px' }}>
+                                  🎉 Contact the seller!
+                                </div>
+                              )}
+                              {eq.status === 'Rejected' && (
+                                <div style={{ fontSize: '0.72rem', color: 'var(--danger)', marginTop: '4px' }}>
+                                  Try another listing
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </Animate>
         )}
       </div>
 
@@ -837,16 +833,17 @@ export default function CattleMarket() {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { installmentsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
 
 const defaultForm = {
   title: '', totalAmount: '', installmentAmount: '',
@@ -36,7 +37,6 @@ export default function Installments() {
 
   useEffect(() => { load(); }, []);
 
-  // ✅ Client-side filtering
   const filtered = installments.filter(i => {
     const matchSearch = !search       || i.title.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !filterStatus || i.status === filterStatus;
@@ -94,20 +94,19 @@ export default function Installments() {
     } finally { setSaving(false); }
   };
 
-  
-const handleDelete = async (id) => {
-  const ok = await confirm({
-    title: 'Delete Installment Plan?',
-    message: 'This payment plan and all its records will be permanently deleted.',
-    confirmText: 'Yes, Delete', type: 'danger'
-  });
-  if (!ok) return;
-  try {
-    await installmentsAPI.delete(id);
-    toast.success('Deleted');
-    load();
-  } catch { toast.error('Failed to delete'); }
-};
+  const handleDelete = async (id) => {
+    const ok = await confirm({
+      title: 'Delete Installment Plan?',
+      message: 'This payment plan and all its records will be permanently deleted.',
+      confirmText: 'Yes, Delete', type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await installmentsAPI.delete(id);
+      toast.success('Deleted');
+      load();
+    } catch { toast.error('Failed to delete'); }
+  };
 
   const statusMap = {
     Active: 'badge-blue', Completed: 'badge-green',
@@ -127,135 +126,146 @@ const handleDelete = async (id) => {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
+
+        {/* ===== STATS — animate up with stagger ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Plans',     value: totalPlans,                               icon: '💳', cls: 'blue'   },
-            { label: 'Active',          value: activePlans,                              icon: '🔄', cls: 'orange' },
-            { label: 'Completed',       value: completedPlans,                           icon: '✅', cls: 'green'  },
-            { label: 'Total Remaining', value: `PKR ${totalRemaining.toLocaleString()}`, icon: '💰', cls: 'purple' },
-          ].map(s => (
-            <div className="stat-card" key={s.label}>
-              <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
-              <div className="stat-info">
-                <div className="value" style={{ fontSize: s.label === 'Total Remaining' ? '1.1rem' : '1.8rem' }}>
-                  {s.value}
+            { label: 'Total Plans',     value: totalPlans,                               icon: '💳', cls: 'blue',   big: false },
+            { label: 'Active',          value: activePlans,                              icon: '🔄', cls: 'orange', big: false },
+            { label: 'Completed',       value: completedPlans,                           icon: '✅', cls: 'green',  big: false },
+            { label: 'Total Remaining', value: `PKR ${totalRemaining.toLocaleString()}`, icon: '💰', cls: 'purple', big: true  },
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value" style={{ fontSize: s.big ? '1.1rem' : '1.8rem' }}>
+                    {s.value}
+                  </div>
+                  <div className="label">{s.label}</div>
                 </div>
-                <div className="label">{s.label}</div>
               </div>
-            </div>
+            </Animate>
           ))}
         </div>
 
-        {/* ✅ Search + Filters */}
-        <div className="filter-bar">
-          <input
-            className="search-input"
-            placeholder="🔍 Search by plan title..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <select
-            className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Status</option>
-            {['Active', 'Completed', 'Overdue', 'Cancelled'].map(s => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
-            value={filterFreq}
-            onChange={e => setFilterFreq(e.target.value)}
-          >
-            <option value="">All Frequencies</option>
-            {['Weekly', 'Monthly', 'Quarterly'].map(f => (
-              <option key={f}>{f}</option>
-            ))}
-          </select>
-          {(search || filterStatus || filterFreq) && (
-            <button
-              className="btn btn-outline btn-sm"
-              onClick={() => { setSearch(''); setFilterStatus(''); setFilterFreq(''); }}
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <input
+              className="search-input"
+              placeholder="🔍 Search by plan title..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select
+              className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value)}
             >
-              ✕ Clear
-            </button>
-          )}
-        </div>
+              <option value="">All Status</option>
+              {['Active', 'Completed', 'Overdue', 'Cancelled'].map(s => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+            <select
+              className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
+              value={filterFreq}
+              onChange={e => setFilterFreq(e.target.value)}
+            >
+              <option value="">All Frequencies</option>
+              {['Weekly', 'Monthly', 'Quarterly'].map(f => (
+                <option key={f}>{f}</option>
+              ))}
+            </select>
+            {(search || filterStatus || filterFreq) && (
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => { setSearch(''); setFilterStatus(''); setFilterFreq(''); }}
+              >
+                ✕ Clear
+              </button>
+            )}
+          </div>
+        </Animate>
 
         {/* Results count */}
         {(search || filterStatus || filterFreq) && (
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-            Showing {filtered.length} of {installments.length} plans
-          </p>
+          <Animate direction="right">
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+              Showing {filtered.length} of {installments.length} plans
+            </p>
+          </Animate>
         )}
 
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading...</p></div>
-          ) : filtered.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">💳</div>
-              <h3>{installments.length === 0 ? 'No installment plans' : 'No results found'}</h3>
-              <p>{installments.length === 0 ? 'Create a plan to start tracking payments' : 'Try adjusting your search or filters'}</p>
-              {installments.length === 0 && (
-                <button className="btn btn-primary" onClick={openAdd}>+ Create Plan</button>
-              )}
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Title</th><th>Total</th><th>Paid</th>
-                    <th>Remaining</th><th>Per Install.</th>
-                    <th>Frequency</th><th>Status</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(i => {
-                    const remaining = Math.max(0, i.totalAmount - i.paidAmount);
-                    const progress  = Math.min(100, Math.round((i.paidAmount / i.totalAmount) * 100));
-                    return (
-                      <tr key={i._id}>
-                        <td>
-                          <strong>{i.title}</strong>
-                          <div style={{ marginTop: '6px', background: '#e8f5e9', borderRadius: '4px', height: '4px', width: '100px' }}>
-                            <div style={{ background: 'var(--primary)', borderRadius: '4px', height: '4px', width: `${progress}%` }} />
-                          </div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{progress}% paid</div>
-                        </td>
-                        <td>PKR {Number(i.totalAmount).toLocaleString()}</td>
-                        <td style={{ color: 'var(--success)', fontWeight: 600 }}>
-                          PKR {Number(i.paidAmount).toLocaleString()}
-                        </td>
-                        <td style={{ color: remaining > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 600 }}>
-                          PKR {remaining.toLocaleString()}
-                        </td>
-                        <td>PKR {Number(i.installmentAmount).toLocaleString()}</td>
-                        <td>{i.frequency}</td>
-                        <td><span className={`badge ${statusMap[i.status]}`}>{i.status}</span></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {i.status === 'Active' && (
-                              <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>Pay</button>
-                            )}
-                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(i)}>Edit</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(i._id)}>Delete</button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={120}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading...</p></div>
+            ) : filtered.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">💳</div>
+                <h3>{installments.length === 0 ? 'No installment plans' : 'No results found'}</h3>
+                <p>{installments.length === 0 ? 'Create a plan to start tracking payments' : 'Try adjusting your search or filters'}</p>
+                {installments.length === 0 && (
+                  <button className="btn btn-primary" onClick={openAdd}>+ Create Plan</button>
+                )}
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Title</th><th>Total</th><th>Paid</th>
+                      <th>Remaining</th><th>Per Install.</th>
+                      <th>Frequency</th><th>Status</th><th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(i => {
+                      const remaining = Math.max(0, i.totalAmount - i.paidAmount);
+                      const progress  = Math.min(100, Math.round((i.paidAmount / i.totalAmount) * 100));
+                      return (
+                        <tr key={i._id}>
+                          <td>
+                            <strong>{i.title}</strong>
+                            <div style={{ marginTop: '6px', background: '#e8f5e9', borderRadius: '4px', height: '4px', width: '100px' }}>
+                              <div style={{ background: 'var(--primary)', borderRadius: '4px', height: '4px', width: `${progress}%` }} />
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{progress}% paid</div>
+                          </td>
+                          <td>PKR {Number(i.totalAmount).toLocaleString()}</td>
+                          <td style={{ color: 'var(--success)', fontWeight: 600 }}>
+                            PKR {Number(i.paidAmount).toLocaleString()}
+                          </td>
+                          <td style={{ color: remaining > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 600 }}>
+                            PKR {remaining.toLocaleString()}
+                          </td>
+                          <td>PKR {Number(i.installmentAmount).toLocaleString()}</td>
+                          <td>{i.frequency}</td>
+                          <td><span className={`badge ${statusMap[i.status]}`}>{i.status}</span></td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                              {i.status === 'Active' && (
+                                <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>Pay</button>
+                              )}
+                              <button className="btn btn-outline btn-sm" onClick={() => openEdit(i)}>Edit</button>
+                              <button className="btn btn-danger btn-sm" onClick={() => handleDelete(i._id)}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
       </div>
 
       {/* Add / Edit Modal */}
@@ -369,16 +379,17 @@ const handleDelete = async (id) => {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
 
 const SPECIES = ['Cow', 'Buffalo', 'Goat', 'Sheep', 'Bull', 'Calf', 'Other'];
 const STATUSES = ['Healthy', 'Sick', 'Pregnant', 'Sold', 'Deceased'];
@@ -93,6 +94,11 @@ export default function MyAnimals() {
     Pregnant: 'badge-purple', Sold: 'badge-gray', Deceased: 'badge-red'
   };
 
+  // Summary stats
+  const healthyCount  = animals.filter(a => a.status === 'Healthy').length;
+  const sickCount     = animals.filter(a => a.status === 'Sick').length;
+  const pregnantCount = animals.filter(a => a.status === 'Pregnant').length;
+
   return (
     <div className="page-animals">
       <div className="page-header">
@@ -102,59 +108,86 @@ export default function MyAnimals() {
 
       <div className="page-content">
         <QuickNav />
-        <div className="filter-bar">
-          <input className="search-input" placeholder="🔍 Search by name or tag ID..."
-            value={search} onChange={e => setSearch(e.target.value)} />
-          <select className="search-input" style={{ flex: 'none', width: 'auto' }}
-            value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
-            <option value="">All Species</option>
-            {SPECIES.map(s => <option key={s}>{s}</option>)}
-          </select>
+
+        {/* ===== STATS — animate up with stagger ===== */}
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
+          {[
+            { label: 'Total Animals', value: animals.length,  icon: '🐄', cls: 'green'  },
+            { label: 'Healthy',       value: healthyCount,    icon: '💚', cls: 'blue'   },
+            { label: 'Sick',          value: sickCount,       icon: '🤒', cls: 'orange' },
+            { label: 'Pregnant',      value: pregnantCount,   icon: '🤰', cls: 'purple' },
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value">{s.value}</div>
+                  <div className="label">{s.label}</div>
+                </div>
+              </div>
+            </Animate>
+          ))}
         </div>
 
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading animals...</p></div>
-          ) : animals.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">🐄</div>
-              <h3>No animals found</h3>
-              <p>Add your first animal to get started</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Add Animal</button>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Tag ID</th><th>Name</th><th>Species</th>
-                    <th>Breed</th><th>Gender</th><th>Weight</th>
-                    <th>Status</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {animals.map(a => (
-                    <tr key={a._id}>
-                      <td><strong>#{a.tagId}</strong></td>
-                      <td>{a.name || '—'}</td>
-                      <td>{a.species}</td>
-                      <td>{a.breed || '—'}</td>
-                      <td>{a.gender}</td>
-                      <td>{a.weight ? `${a.weight} kg` : '—'}</td>
-                      <td><span className={`badge ${statusBadge[a.status] || 'badge-gray'}`}>{a.status}</span></td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(a)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(a._id)}>Delete</button>
-                        </div>
-                      </td>
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <input className="search-input" placeholder="🔍 Search by name or tag ID..."
+              value={search} onChange={e => setSearch(e.target.value)} />
+            <select className="search-input" style={{ flex: 'none', width: 'auto' }}
+              value={filterSpecies} onChange={e => setFilterSpecies(e.target.value)}>
+              <option value="">All Species</option>
+              {SPECIES.map(s => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+        </Animate>
+
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={120}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading animals...</p></div>
+            ) : animals.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">🐄</div>
+                <h3>No animals found</h3>
+                <p>Add your first animal to get started</p>
+                <button className="btn btn-primary" onClick={openAdd}>+ Add Animal</button>
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Tag ID</th><th>Name</th><th>Species</th>
+                      <th>Breed</th><th>Gender</th><th>Weight</th>
+                      <th>Status</th><th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {animals.map(a => (
+                      <tr key={a._id}>
+                        <td><strong>#{a.tagId}</strong></td>
+                        <td>{a.name || '—'}</td>
+                        <td>{a.species}</td>
+                        <td>{a.breed || '—'}</td>
+                        <td>{a.gender}</td>
+                        <td>{a.weight ? `${a.weight} kg` : '—'}</td>
+                        <td><span className={`badge ${statusBadge[a.status] || 'badge-gray'}`}>{a.status}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(a)}>Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(a._id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
       </div>
 
       {showModal && (

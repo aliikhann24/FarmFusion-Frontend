@@ -4,6 +4,7 @@ import { progressAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
 
 const defaultForm = {
   animal: '',
@@ -31,7 +32,6 @@ const isValidVideoLink = (url) => {
          url.includes('drive.google.com') || url.startsWith('http');
 };
 
-// Compress image before converting to base64
 const compressImage = (file, maxSizeKB = 500) => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -167,19 +167,18 @@ export default function AnimalProgress() {
   };
 
   const handleDelete = async (id) => {
-  const ok = await confirm({
-    title: 'Delete Progress Record?',
-    message: 'This progress entry including any photo will be permanently removed.',
-    confirmText: 'Yes, Delete', type: 'danger'
-  });
-  if (!ok) return;
-  try {
-    await progressAPI.delete(id);
-    toast.success('Deleted');
-    load();
-  } catch { toast.error('Failed to delete'); }
-};
-
+    const ok = await confirm({
+      title: 'Delete Progress Record?',
+      message: 'This progress entry including any photo will be permanently removed.',
+      confirmText: 'Yes, Delete', type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await progressAPI.delete(id);
+      toast.success('Deleted');
+      load();
+    } catch { toast.error('Failed to delete'); }
+  };
 
   const closeModal = () => {
     setShowModal(false);
@@ -208,7 +207,7 @@ export default function AnimalProgress() {
     ? (records.filter(r => r.milkProduction).reduce((s, r) => s + r.milkProduction, 0) / records.filter(r => r.milkProduction).length).toFixed(1)
     : 0;
 
- return (
+  return (
     <div className="page-progress">
       <div className="page-header">
         <div><h2>📈 Animal Progress</h2><p>Track health & growth over time</p></div>
@@ -216,130 +215,136 @@ export default function AnimalProgress() {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
 
-        {/* Stats */}
+        {/* ===== STATS — animate up with stagger ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records',    value: records.length, icon: '📈', cls: 'green'  },
             { label: 'Avg Weight (kg)',  value: avgWeight,      icon: '⚖️', cls: 'blue'   },
             { label: 'Avg Milk (L/day)', value: avgMilk,        icon: '🥛', cls: 'orange' },
             { label: 'Excellent Health', value: records.filter(r => r.healthStatus === 'Excellent').length, icon: '💚', cls: 'purple' },
-          ].map(s => (
-            <div className="stat-card" key={s.label}>
-              <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
-              <div className="stat-info">
-                <div className="value">{s.value}</div>
-                <div className="label">{s.label}</div>
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value">{s.value}</div>
+                  <div className="label">{s.label}</div>
+                </div>
               </div>
-            </div>
+            </Animate>
           ))}
         </div>
 
-        {/* Filter */}
-        <div className="filter-bar">
-          <select className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
-            value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
-            <option value="">All Animals</option>
-            {animals.map(a => (
-              <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
-            ))}
-          </select>
-        </div>
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <select className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
+              value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
+              <option value="">All Animals</option>
+              {animals.map(a => (
+                <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
+              ))}
+            </select>
+          </div>
+        </Animate>
 
-        {/* Table */}
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading...</p></div>
-          ) : records.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">📈</div>
-              <h3>No progress records</h3>
-              <p>Start tracking your animals' health and growth</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Add Progress</button>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Animal</th>
-                    <th>Date</th>
-                    <th>Weight</th>
-                    <th>Height</th>
-                    <th>Milk</th>
-                    <th>Health</th>
-                    <th>Photo</th>
-                    <th>Video</th>
-                    <th>Notes</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map(r => (
-                    <tr key={r._id}>
-                      <td>
-                        <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          {r.animal?.species}
-                        </div>
-                      </td>
-                      <td>{new Date(r.date).toLocaleDateString()}</td>
-                      <td>{r.weight ? `${r.weight} kg` : '—'}</td>
-                      <td>{r.height ? `${r.height} cm` : '—'}</td>
-                      <td>{r.milkProduction ? `${r.milkProduction} L` : '—'}</td>
-                      <td>
-                        <span className={`badge ${healthMap[r.healthStatus]}`}>
-                          {r.healthStatus}
-                        </span>
-                      </td>
-                      <td>
-                        {r.imageBase64 ? (
-                          <img
-                            src={getImageSrc(r)}
-                            alt="progress"
-                            onClick={() => setViewImage(getImageSrc(r))}
-                            style={{
-                              width: '44px', height: '44px',
-                              objectFit: 'cover', borderRadius: '8px',
-                              cursor: 'pointer', border: '2px solid var(--border)'
-                            }}
-                          />
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
-                        )}
-                      </td>
-                      <td>
-                        {r.videoLink ? (
-                          <button className="btn btn-outline btn-sm"
-                            onClick={() => setViewVideo(r.videoLink)}>
-                            🎥 Watch
-                          </button>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {r.notes || '—'}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>
-                            Edit
-                          </button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>
-                            Delete
-                          </button>
-                        </div>
-                      </td>
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={120}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading...</p></div>
+            ) : records.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">📈</div>
+                <h3>No progress records</h3>
+                <p>Start tracking your animals' health and growth</p>
+                <button className="btn btn-primary" onClick={openAdd}>+ Add Progress</button>
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Animal</th>
+                      <th>Date</th>
+                      <th>Weight</th>
+                      <th>Height</th>
+                      <th>Milk</th>
+                      <th>Health</th>
+                      <th>Photo</th>
+                      <th>Video</th>
+                      <th>Notes</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {records.map(r => (
+                      <tr key={r._id}>
+                        <td>
+                          <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                            {r.animal?.species}
+                          </div>
+                        </td>
+                        <td>{new Date(r.date).toLocaleDateString()}</td>
+                        <td>{r.weight ? `${r.weight} kg` : '—'}</td>
+                        <td>{r.height ? `${r.height} cm` : '—'}</td>
+                        <td>{r.milkProduction ? `${r.milkProduction} L` : '—'}</td>
+                        <td>
+                          <span className={`badge ${healthMap[r.healthStatus]}`}>
+                            {r.healthStatus}
+                          </span>
+                        </td>
+                        <td>
+                          {r.imageBase64 ? (
+                            <img
+                              src={getImageSrc(r)}
+                              alt="progress"
+                              onClick={() => setViewImage(getImageSrc(r))}
+                              style={{
+                                width: '44px', height: '44px',
+                                objectFit: 'cover', borderRadius: '8px',
+                                cursor: 'pointer', border: '2px solid var(--border)'
+                              }}
+                            />
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          {r.videoLink ? (
+                            <button className="btn btn-outline btn-sm"
+                              onClick={() => setViewVideo(r.videoLink)}>
+                              🎥 Watch
+                            </button>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.notes || '—'}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>
+                              Edit
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
       </div>
 
       {/* Add / Edit Modal */}
@@ -403,7 +408,6 @@ export default function AnimalProgress() {
                   </div>
                 </div>
 
-                {/* Image Upload with auto-compression */}
                 <div className="form-group">
                   <label>📸 Animal Photo (optional, up to 5MB — auto compressed)</label>
                   {!imagePreview ? (
@@ -434,7 +438,6 @@ export default function AnimalProgress() {
                   )}
                 </div>
 
-                {/* Video Link */}
                 <div className="form-group">
                   <label>🎥 Video Link (optional)</label>
                   <input
@@ -520,16 +523,17 @@ export default function AnimalProgress() {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

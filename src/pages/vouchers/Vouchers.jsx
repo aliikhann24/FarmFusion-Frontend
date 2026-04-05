@@ -4,6 +4,7 @@ import { vouchersAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
 
 const defaultForm = {
   type: 'Purchase', amount: '',
@@ -19,7 +20,6 @@ export default function Vouchers() {
   const [saving, setSaving]         = useState(false);
   const [filterType, setFilterType] = useState('');
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
-
 
   const load = async () => {
     setLoading(true);
@@ -74,18 +74,18 @@ export default function Vouchers() {
   };
 
   const handleDelete = async (id) => {
-  const ok = await confirm({
-    title: 'Delete Voucher?',
-    message: 'This financial record will be permanently deleted.',
-    confirmText: 'Yes, Delete', type: 'danger'
-  });
-  if (!ok) return;
-  try {
-    await vouchersAPI.delete(id);
-    toast.success('Deleted');
-    load();
-  } catch { toast.error('Failed to delete'); }
-};
+    const ok = await confirm({
+      title: 'Delete Voucher?',
+      message: 'This financial record will be permanently deleted.',
+      confirmText: 'Yes, Delete', type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await vouchersAPI.delete(id);
+      toast.success('Deleted');
+      load();
+    } catch { toast.error('Failed to delete'); }
+  };
 
   const isIncome = (type) => ['Sale', 'Income'].includes(type);
   const typeMap  = {
@@ -105,83 +105,93 @@ export default function Vouchers() {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
+
+        {/* ===== STATS — animate up with stagger ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Vouchers', value: vouchers.length,                      icon: '🧾', cls: 'blue',   big: false },
-            { label: 'Total Income',   value: `PKR ${totalIncome.toLocaleString()}`, icon: '📥', cls: 'green',  big: true  },
-            { label: 'Total Expenses', value: `PKR ${totalExpense.toLocaleString()}`,icon: '📤', cls: 'orange', big: true  },
-            { label: 'Net Balance',    value: `PKR ${netBalance.toLocaleString()}`,  icon: '💰', cls: 'purple', big: true  },
-          ].map(s => (
-            <div className="stat-card" key={s.label}>
-              <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
-              <div className="stat-info">
-                <div className="value" style={{
-                  fontSize: s.big ? '1.1rem' : '1.8rem',
-                  color: s.label === 'Net Balance'
-                    ? netBalance >= 0 ? 'var(--success)' : 'var(--danger)'
-                    : undefined
-                }}>{s.value}</div>
-                <div className="label">{s.label}</div>
+            { label: 'Total Vouchers', value: vouchers.length,                       icon: '🧾', cls: 'blue',   big: false },
+            { label: 'Total Income',   value: `PKR ${totalIncome.toLocaleString()}`,  icon: '📥', cls: 'green',  big: true  },
+            { label: 'Total Expenses', value: `PKR ${totalExpense.toLocaleString()}`, icon: '📤', cls: 'orange', big: true  },
+            { label: 'Net Balance',    value: `PKR ${netBalance.toLocaleString()}`,   icon: '💰', cls: 'purple', big: true  },
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value" style={{
+                    fontSize: s.big ? '1.1rem' : '1.8rem',
+                    color: s.label === 'Net Balance'
+                      ? netBalance >= 0 ? 'var(--success)' : 'var(--danger)'
+                      : undefined
+                  }}>{s.value}</div>
+                  <div className="label">{s.label}</div>
+                </div>
               </div>
-            </div>
+            </Animate>
           ))}
         </div>
 
-        <div className="filter-bar">
-          <select className="search-input" style={{ flex: 'none', width: 'auto' }}
-            value={filterType} onChange={e => setFilterType(e.target.value)}>
-            <option value="">All Types</option>
-            {['Purchase', 'Sale', 'Expense', 'Income'].map(t => <option key={t}>{t}</option>)}
-          </select>
-        </div>
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <select className="search-input" style={{ flex: 'none', width: 'auto' }}
+              value={filterType} onChange={e => setFilterType(e.target.value)}>
+              <option value="">All Types</option>
+              {['Purchase', 'Sale', 'Expense', 'Income'].map(t => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+        </Animate>
 
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading...</p></div>
-          ) : vouchers.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">🧾</div>
-              <h3>No vouchers yet</h3>
-              <p>Start recording your financial transactions</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Create Voucher</button>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Voucher #</th><th>Type</th><th>Description</th>
-                    <th>Amount</th><th>Date</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {vouchers.map(v => (
-                    <tr key={v._id}>
-                      <td>
-                        <code style={{ fontSize: '0.78rem', background: '#f5f5f5', padding: '2px 8px', borderRadius: '4px' }}>
-                          {v.voucherNumber}
-                        </code>
-                      </td>
-                      <td><span className={`badge ${typeMap[v.type]}`}>{v.type}</span></td>
-                      <td>{v.description}</td>
-                      <td style={{ fontWeight: 700, color: isIncome(v.type) ? 'var(--success)' : 'var(--danger)' }}>
-                        {isIncome(v.type) ? '+' : '-'} PKR {Number(v.amount).toLocaleString()}
-                      </td>
-                      <td>{new Date(v.date).toLocaleDateString()}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(v)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(v._id)}>Delete</button>
-                        </div>
-                      </td>
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={120}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading...</p></div>
+            ) : vouchers.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">🧾</div>
+                <h3>No vouchers yet</h3>
+                <p>Start recording your financial transactions</p>
+                <button className="btn btn-primary" onClick={openAdd}>+ Create Voucher</button>
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Voucher #</th><th>Type</th><th>Description</th>
+                      <th>Amount</th><th>Date</th><th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {vouchers.map(v => (
+                      <tr key={v._id}>
+                        <td>
+                          <code style={{ fontSize: '0.78rem', background: '#f5f5f5', padding: '2px 8px', borderRadius: '4px' }}>
+                            {v.voucherNumber}
+                          </code>
+                        </td>
+                        <td><span className={`badge ${typeMap[v.type]}`}>{v.type}</span></td>
+                        <td>{v.description}</td>
+                        <td style={{ fontWeight: 700, color: isIncome(v.type) ? 'var(--success)' : 'var(--danger)' }}>
+                          {isIncome(v.type) ? '+' : '-'} PKR {Number(v.amount).toLocaleString()}
+                        </td>
+                        <td>{new Date(v.date).toLocaleDateString()}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(v)}>Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(v._id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
       </div>
 
       {showModal && (
@@ -241,16 +251,17 @@ export default function Vouchers() {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
