@@ -28,10 +28,28 @@ export default function Login() {
 
   return (
     <div className="auth-page">
+      <style>{`
+        @keyframes ff-slideLeft {
+          from { opacity: 0; transform: translateX(-48px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes ff-slideRight {
+          from { opacity: 0; transform: translateX(48px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .ff-brand-in {
+          animation: ff-slideLeft 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .ff-card-in {
+          animation: ff-slideRight 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation-delay: 80ms;
+        }
+      `}</style>
+
       <div className="auth-bg auth-bg-login" />
       <div className="auth-container">
 
-        <div className="auth-brand">
+        <div className="auth-brand ff-brand-in">
           <div className="auth-brand-logo">Farm<span>Fusion</span></div>
           <p className="auth-brand-tagline">Your complete livestock management platform</p>
           <ul className="auth-brand-features">
@@ -43,7 +61,7 @@ export default function Login() {
           </ul>
         </div>
 
-        <div className="auth-card">
+        <div className="auth-card ff-card-in">
           <div className="auth-card-header">
             <div className="auth-card-icon">🌾</div>
             <h2>Welcome</h2>
