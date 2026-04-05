@@ -4,6 +4,7 @@ import { breedingAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
 
 const defaultForm = {
   femaleAnimal: '', maleAnimal: '',
@@ -39,7 +40,6 @@ export default function BreedingRecords() {
 
   useEffect(() => { load(); }, []);
 
-  // ✅ Client-side filtering
   const filtered = records.filter(r => {
     const femaleName = (r.femaleAnimal?.name || r.femaleAnimal?.tagId || '').toLowerCase();
     const maleName   = (r.maleAnimal?.name   || r.maleAnimal?.tagId   || '').toLowerCase();
@@ -50,8 +50,7 @@ export default function BreedingRecords() {
     return matchSearch && matchOutcome && matchAnimal;
   });
 
-  const openAdd = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
-
+  const openAdd  = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
   const openEdit = (r) => {
     setEditRecord(r);
     setForm({
@@ -64,7 +63,6 @@ export default function BreedingRecords() {
     });
     setShowModal(true);
   };
-
   const closeModal = () => { setShowModal(false); setEditRecord(null); setForm(defaultForm); };
 
   const handleSubmit = async (e) => {
@@ -85,29 +83,25 @@ export default function BreedingRecords() {
     } finally { setSaving(false); }
   };
 
- const handleDelete = async (id) => {
-  const ok = await confirm({
-    title: 'Delete Breeding Record?',
-    message: 'This breeding history record will be permanently deleted.',
-    confirmText: 'Yes, Delete',
-    type: 'danger'
-  });
+  const handleDelete = async (id) => {
+    const ok = await confirm({
+      title: 'Delete Breeding Record?',
+      message: 'This breeding history record will be permanently deleted.',
+      confirmText: 'Yes, Delete',
+      type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await breedingAPI.delete(id);
+      toast.success('Breeding record deleted');
+      load();
+    } catch { toast.error('Failed to delete'); }
+  };
 
-  if (!ok) return;
-
-  try {
-    await breedingAPI.delete(id);
-    toast.success('Breeding record deleted');
-    load();
-  } catch {
-    toast.error('Failed to delete');
-  }
-};
   const outcomeMap = {
     Pending: 'badge-orange', Successful: 'badge-green',
     Failed: 'badge-red', Miscarriage: 'badge-red'
   };
-
   const females = animals.filter(a => a.gender === 'Female');
   const males   = animals.filter(a => a.gender === 'Male');
 
@@ -119,65 +113,71 @@ export default function BreedingRecords() {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
+
+        {/* ===== STATS — animate up with stagger ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records', value: records.length,                                         icon: '🧬', cls: 'purple' },
             { label: 'Pending',       value: records.filter(r => r.outcome === 'Pending').length,    icon: '⏳', cls: 'orange' },
             { label: 'Successful',    value: records.filter(r => r.outcome === 'Successful').length, icon: '✅', cls: 'green'  },
             { label: 'Failed',        value: records.filter(r => r.outcome === 'Failed').length,     icon: '❌', cls: 'blue'   },
-          ].map(s => (
-            <div className="stat-card" key={s.label}>
-              <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
-              <div className="stat-info">
-                <div className="value">{s.value}</div>
-                <div className="label">{s.label}</div>
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value">{s.value}</div>
+                  <div className="label">{s.label}</div>
+                </div>
               </div>
-            </div>
+            </Animate>
           ))}
         </div>
 
-        {/* ✅ Search + Filters */}
-        <div className="filter-bar">
-          <input
-            className="search-input"
-            placeholder="🔍 Search by animal name, tag or species..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <select
-            className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '160px' }}
-            value={filterAnimal}
-            onChange={e => setFilterAnimal(e.target.value)}
-          >
-            <option value="">All Animals</option>
-            {animals.map(a => (
-              <option key={a._id} value={a._id}>
-                {a.name || a.tagId} ({a.species})
-              </option>
-            ))}
-          </select>
-          <select
-            className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
-            value={filterOutcome}
-            onChange={e => setFilterOutcome(e.target.value)}
-          >
-            <option value="">All Outcomes</option>
-            {['Pending', 'Successful', 'Failed', 'Miscarriage'].map(o => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-          {(search || filterAnimal || filterOutcome) && (
-            <button
-              className="btn btn-outline btn-sm"
-              onClick={() => { setSearch(''); setFilterAnimal(''); setFilterOutcome(''); }}
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <input
+              className="search-input"
+              placeholder="🔍 Search by animal name, tag or species..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <select
+              className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '160px' }}
+              value={filterAnimal}
+              onChange={e => setFilterAnimal(e.target.value)}
             >
-              ✕ Clear
-            </button>
-          )}
-        </div>
+              <option value="">All Animals</option>
+              {animals.map(a => (
+                <option key={a._id} value={a._id}>
+                  {a.name || a.tagId} ({a.species})
+                </option>
+              ))}
+            </select>
+            <select
+              className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '140px' }}
+              value={filterOutcome}
+              onChange={e => setFilterOutcome(e.target.value)}
+            >
+              <option value="">All Outcomes</option>
+              {['Pending', 'Successful', 'Failed', 'Miscarriage'].map(o => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+            {(search || filterAnimal || filterOutcome) && (
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => { setSearch(''); setFilterAnimal(''); setFilterOutcome(''); }}
+              >
+                ✕ Clear
+              </button>
+            )}
+          </div>
+        </Animate>
 
         {/* Results count */}
         {(search || filterAnimal || filterOutcome) && (
@@ -186,57 +186,62 @@ export default function BreedingRecords() {
           </p>
         )}
 
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading...</p></div>
-          ) : filtered.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">🧬</div>
-              <h3>{records.length === 0 ? 'No breeding records' : 'No results found'}</h3>
-              <p>{records.length === 0 ? "Start tracking your animals' breeding history" : 'Try adjusting your search or filters'}</p>
-              {records.length === 0 && (
-                <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
-              )}
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Female Animal</th><th>Male Animal</th>
-                    <th>Breeding Date</th><th>Expected Delivery</th>
-                    <th>Outcome</th><th>Notes</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(r => (
-                    <tr key={r._id}>
-                      <td>
-                        <strong>{r.femaleAnimal?.name || r.femaleAnimal?.tagId || '—'}</strong>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.femaleAnimal?.species}</div>
-                      </td>
-                      <td>{r.maleAnimal?.name || r.maleAnimal?.tagId || 'External'}</td>
-                      <td>{r.breedingDate ? new Date(r.breedingDate).toLocaleDateString() : '—'}</td>
-                      <td>{r.expectedDelivery ? new Date(r.expectedDelivery).toLocaleDateString() : '—'}</td>
-                      <td><span className={`badge ${outcomeMap[r.outcome]}`}>{r.outcome}</span></td>
-                      <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {r.notes || '—'}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
-                        </div>
-                      </td>
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={100}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading...</p></div>
+            ) : filtered.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">🧬</div>
+                <h3>{records.length === 0 ? 'No breeding records' : 'No results found'}</h3>
+                <p>{records.length === 0 ? "Start tracking your animals' breeding history" : 'Try adjusting your search or filters'}</p>
+                {records.length === 0 && (
+                  <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
+                )}
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Female Animal</th><th>Male Animal</th>
+                      <th>Breeding Date</th><th>Expected Delivery</th>
+                      <th>Outcome</th><th>Notes</th><th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {filtered.map(r => (
+                      <tr key={r._id}>
+                        <td>
+                          <strong>{r.femaleAnimal?.name || r.femaleAnimal?.tagId || '—'}</strong>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.femaleAnimal?.species}</div>
+                        </td>
+                        <td>{r.maleAnimal?.name || r.maleAnimal?.tagId || 'External'}</td>
+                        <td>{r.breedingDate ? new Date(r.breedingDate).toLocaleDateString() : '—'}</td>
+                        <td>{r.expectedDelivery ? new Date(r.expectedDelivery).toLocaleDateString() : '—'}</td>
+                        <td><span className={`badge ${outcomeMap[r.outcome]}`}>{r.outcome}</span></td>
+                        <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.notes || '—'}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
+
       </div>
 
+      {/* ===== MODAL ===== */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -304,17 +309,17 @@ export default function BreedingRecords() {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
-    
   );
 }

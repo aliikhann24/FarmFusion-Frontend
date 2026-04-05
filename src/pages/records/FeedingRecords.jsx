@@ -4,6 +4,8 @@ import { feedingAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
+
 const defaultForm = {
   animal: '', feedType: '', quantity: '', unit: 'kg',
   feedingDate: new Date().toISOString().split('T')[0], cost: '', notes: ''
@@ -35,12 +37,7 @@ export default function FeedingRecords() {
 
   useEffect(() => { load(); }, [filterAnimal]);
 
-  const openAdd = () => {
-    setEditRecord(null);
-    setForm(defaultForm);
-    setShowModal(true);
-  };
-
+  const openAdd  = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
   const openEdit = (r) => {
     setEditRecord(r);
     setForm({
@@ -54,12 +51,7 @@ export default function FeedingRecords() {
     });
     setShowModal(true);
   };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditRecord(null);
-    setForm(defaultForm);
-  };
+  const closeModal = () => { setShowModal(false); setEditRecord(null); setForm(defaultForm); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,31 +71,27 @@ export default function FeedingRecords() {
     } finally { setSaving(false); }
   };
 
- const handleDelete = async (id) => {
-  const ok = await confirm({
-    title: 'Delete Feeding Record?',
-    message: 'This feeding record will be permanently deleted.',
-    confirmText: 'Yes, Delete',
-    type: 'danger'
-  });
-
-  if (!ok) return;
-
-  try {
-    await feedingAPI.delete(id);
-    toast.success('Feeding record deleted');
-    load();
-  } catch {
-    toast.error('Failed to delete');
-  }
-};
+  const handleDelete = async (id) => {
+    const ok = await confirm({
+      title: 'Delete Feeding Record?',
+      message: 'This feeding record will be permanently deleted.',
+      confirmText: 'Yes, Delete',
+      type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await feedingAPI.delete(id);
+      toast.success('Feeding record deleted');
+      load();
+    } catch { toast.error('Failed to delete'); }
+  };
 
   const totalCost     = records.reduce((sum, r) => sum + (r.cost || 0), 0);
   const totalRecords  = records.length;
   const uniqueAnimals = [...new Set(records.map(r => r.animal?._id))].length;
   const feedTypes     = [...new Set(records.map(r => r.feedType))].length;
 
- return (
+  return (
     <div className="page-feeding">
       <div className="page-header">
         <div><h2>🌾 Feeding Records</h2><p>Track animal feed & nutrition</p></div>
@@ -111,83 +99,98 @@ export default function FeedingRecords() {
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
+
+        {/* ===== STATS — animate up with stagger ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records',    value: totalRecords,               icon: '🌾', cls: 'green'  },
             { label: 'Animals Fed',      value: uniqueAnimals,              icon: '🐄', cls: 'blue'   },
             { label: 'Feed Types',       value: feedTypes,                  icon: '🥣', cls: 'orange' },
             { label: 'Total Cost (PKR)', value: totalCost.toLocaleString(), icon: '💰', cls: 'purple' },
-          ].map(s => (
-            <div className="stat-card" key={s.label}>
-              <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
-              <div className="stat-info">
-                <div className="value">{s.value}</div>
-                <div className="label">{s.label}</div>
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value">{s.value}</div>
+                  <div className="label">{s.label}</div>
+                </div>
               </div>
-            </div>
+            </Animate>
           ))}
         </div>
 
-        <div className="filter-bar">
-          <select className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
-            value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
-            <option value="">All Animals</option>
-            {animals.map(a => (
-              <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
-            ))}
-          </select>
-        </div>
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <select
+              className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
+              value={filterAnimal}
+              onChange={e => setFilterAnimal(e.target.value)}
+            >
+              <option value="">All Animals</option>
+              {animals.map(a => (
+                <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
+              ))}
+            </select>
+          </div>
+        </Animate>
 
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading...</p></div>
-          ) : records.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">🌾</div>
-              <h3>No feeding records</h3>
-              <p>Start logging what your animals eat</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Animal</th><th>Feed Type</th><th>Quantity</th>
-                    <th>Cost (PKR)</th><th>Date</th><th>Notes</th><th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map(r => (
-                    <tr key={r._id}>
-                      <td>
-                        <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.animal?.species}</div>
-                      </td>
-                      <td><span className="badge badge-green">{r.feedType}</span></td>
-                      <td>{r.quantity} {r.unit}</td>
-                      <td>{r.cost ? `PKR ${Number(r.cost).toLocaleString()}` : '—'}</td>
-                      <td>{new Date(r.feedingDate).toLocaleDateString()}</td>
-                      <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {r.notes || '—'}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
-                        </div>
-                      </td>
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={100}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading...</p></div>
+            ) : records.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">🌾</div>
+                <h3>No feeding records</h3>
+                <p>Start logging what your animals eat</p>
+                <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Animal</th><th>Feed Type</th><th>Quantity</th>
+                      <th>Cost (PKR)</th><th>Date</th><th>Notes</th><th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {records.map(r => (
+                      <tr key={r._id}>
+                        <td>
+                          <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.animal?.species}</div>
+                        </td>
+                        <td><span className="badge badge-green">{r.feedType}</span></td>
+                        <td>{r.quantity} {r.unit}</td>
+                        <td>{r.cost ? `PKR ${Number(r.cost).toLocaleString()}` : '—'}</td>
+                        <td>{new Date(r.feedingDate).toLocaleDateString()}</td>
+                        <td style={{ maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {r.notes || '—'}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
+
       </div>
 
+      {/* ===== MODAL ===== */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -231,10 +234,8 @@ export default function FeedingRecords() {
                     <label>Unit</label>
                     <select value={form.unit}
                       onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}>
-                      <option>kg</option>
-                      <option>lbs</option>
-                      <option>liters</option>
-                      <option>grams</option>
+                      <option>kg</option><option>lbs</option>
+                      <option>liters</option><option>grams</option>
                     </select>
                   </div>
                 </div>
@@ -261,16 +262,17 @@ export default function FeedingRecords() {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

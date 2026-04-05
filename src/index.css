@@ -768,3 +768,62 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
     opacity: 0.10;
   }
 }
+/* ===== SCROLL ANIMATIONS ===== */
+/* Page content children animate in on load */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Stat cards stagger from bottom */
+.stats-grid .stat-card:nth-child(1) { animation: slideInUp 0.5s ease 0.05s both; }
+.stats-grid .stat-card:nth-child(2) { animation: slideInUp 0.5s ease 0.15s both; }
+.stats-grid .stat-card:nth-child(3) { animation: slideInUp 0.5s ease 0.25s both; }
+.stats-grid .stat-card:nth-child(4) { animation: slideInUp 0.5s ease 0.35s both; }
+
+/* Cards pop in */
+.card { animation: popIn 0.4s ease both; }
+
+/* Table rows slide in */
+tbody tr {
+  animation: slideInUp 0.3s ease both;
+}
+tbody tr:nth-child(1)  { animation-delay: 0.05s; }
+tbody tr:nth-child(2)  { animation-delay: 0.10s; }
+tbody tr:nth-child(3)  { animation-delay: 0.15s; }
+tbody tr:nth-child(4)  { animation-delay: 0.20s; }
+tbody tr:nth-child(5)  { animation-delay: 0.25s; }
+tbody tr:nth-child(6)  { animation-delay: 0.30s; }
+tbody tr:nth-child(7)  { animation-delay: 0.35s; }
+tbody tr:nth-child(8)  { animation-delay: 0.40s; }
+tbody tr:nth-child(9)  { animation-delay: 0.45s; }
+tbody tr:nth-child(10) { animation-delay: 0.50s; }
+
+/* Page header slides from top */
+.page-header { animation: slideInUp 0.4s ease both; }
+
+/* QuickNav slides from left */
+/* (handled inline by Animate component) */
+
+/* Modal pop */
+.modal { animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both !important; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

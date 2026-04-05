@@ -4,6 +4,8 @@ import { vaccinationAPI, animalsAPI } from '../../utils/api';
 import QuickNav from '../../components/common/QuickNav';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import useConfirm from '../../hooks/UseConfirm';
+import Animate from '../../components/common/Animate';
+
 const VACCINE_TYPES = ['Vaccine', 'Medicine', 'Antibiotic', 'Supplement', 'Other'];
 const STATUSES = ['Given', 'Scheduled', 'Overdue'];
 
@@ -39,28 +41,24 @@ export default function VaccinationRecords() {
 
   useEffect(() => { load(); }, [filterAnimal]);
 
-  const openAdd = () => {
-    setEditRecord(null);
-    setForm(defaultForm);
-    setShowModal(true);
-  };
-
+  const openAdd  = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
   const openEdit = (r) => {
     setEditRecord(r);
     setForm({
       animal:      r.animal?._id || '',
       vaccineName: r.vaccineName || '',
       vaccineType: r.vaccineType || 'Medicine',
-      dosage:      r.dosage || '',
-      date:        r.date ? r.date.split('T')[0] : '',
+      dosage:      r.dosage      || '',
+      date:        r.date        ? r.date.split('T')[0]        : '',
       nextDueDate: r.nextDueDate ? r.nextDueDate.split('T')[0] : '',
-      givenBy:     r.givenBy || '',
-      cost:        r.cost || '',
-      notes:       r.notes || '',
-      status:      r.status || 'Given'
+      givenBy:     r.givenBy     || '',
+      cost:        r.cost        || '',
+      notes:       r.notes       || '',
+      status:      r.status      || 'Given'
     });
     setShowModal(true);
   };
+  const closeModal = () => { setShowModal(false); setEditRecord(null); setForm(defaultForm); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,190 +71,176 @@ export default function VaccinationRecords() {
         await vaccinationAPI.create(form);
         toast.success('Vaccination recorded! 💉');
       }
-      setShowModal(false);
-      setForm(defaultForm);
-      setEditRecord(null);
+      closeModal();
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
     } finally { setSaving(false); }
   };
 
- const handleDelete = async (id) => {
-  const ok = await confirm({
-    title: 'Delete Vaccination Record?',
-    message: 'This vaccination entry will be permanently removed.',
-    confirmText: 'Yes, Delete', type: 'danger'
-  });
-  if (!ok) return;
-  try {
-    await vaccinationAPI.delete(id);
-    toast.success('Deleted');
-    load();
-  } catch { toast.error('Failed to delete'); }
-};
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditRecord(null);
-    setForm(defaultForm);
+  const handleDelete = async (id) => {
+    const ok = await confirm({
+      title: 'Delete Vaccination Record?',
+      message: 'This vaccination entry will be permanently removed.',
+      confirmText: 'Yes, Delete',
+      type: 'danger'
+    });
+    if (!ok) return;
+    try {
+      await vaccinationAPI.delete(id);
+      toast.success('Deleted');
+      load();
+    } catch { toast.error('Failed to delete'); }
   };
 
-  const statusMap = {
-    Given:     'badge-green',
-    Scheduled: 'badge-orange',
-    Overdue:   'badge-red'
+  const statusMap = { Given: 'badge-green', Scheduled: 'badge-orange', Overdue: 'badge-red' };
+  const typeMap   = {
+    Vaccine: 'badge-blue', Medicine: 'badge-purple',
+    Antibiotic: 'badge-red', Supplement: 'badge-green', Other: 'badge-gray'
   };
 
-  const typeMap = {
-    Vaccine:     'badge-blue',
-    Medicine:    'badge-purple',
-    Antibiotic:  'badge-red',
-    Supplement:  'badge-green',
-    Other:       'badge-gray'
-  };
-
-  const totalCost     = records.reduce((s, r) => s + (r.cost || 0), 0);
-  const givenCount    = records.filter(r => r.status === 'Given').length;
+  const totalCost      = records.reduce((s, r) => s + (r.cost || 0), 0);
+  const givenCount     = records.filter(r => r.status === 'Given').length;
   const scheduledCount = records.filter(r => r.status === 'Scheduled').length;
-  const overdueCount  = records.filter(r => r.status === 'Overdue').length;
+  const overdueCount   = records.filter(r => r.status === 'Overdue').length;
 
   return (
     <div className="page-vaccination">
       <div className="page-header">
-        <div>
-          <h2>💉 Vaccination Records</h2>
-          <p>Track medicines & vaccinations</p>
-        </div>
+        <div><h2>💉 Vaccination Records</h2><p>Track medicines & vaccinations</p></div>
         <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
       </div>
 
       <div className="page-content">
-        <QuickNav></QuickNav>
+        <QuickNav />
 
-        {/* Stats */}
+        {/* ===== STATS — animate up with stagger ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records', value: records.length,  icon: '💉', cls: 'green'  },
             { label: 'Given',         value: givenCount,       icon: '✅', cls: 'blue'   },
             { label: 'Scheduled',     value: scheduledCount,   icon: '📅', cls: 'orange' },
             { label: 'Total Cost',    value: `PKR ${totalCost.toLocaleString()}`, icon: '💰', cls: 'purple' },
-          ].map(s => (
-            <div className="stat-card" key={s.label}>
-              <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
-              <div className="stat-info">
-                <div className="value" style={{ fontSize: s.label === 'Total Cost' ? '1.1rem' : '1.8rem' }}>
-                  {s.value}
+          ].map((s, i) => (
+            <Animate key={s.label} direction="up" delay={i * 80}>
+              <div className="stat-card">
+                <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
+                <div className="stat-info">
+                  <div className="value" style={{ fontSize: s.label === 'Total Cost' ? '1.1rem' : '1.8rem' }}>
+                    {s.value}
+                  </div>
+                  <div className="label">{s.label}</div>
                 </div>
-                <div className="label">{s.label}</div>
               </div>
-            </div>
+            </Animate>
           ))}
         </div>
 
-        {/* Overdue Alert */}
-        {overdueCount > 0 && (
-          <div style={{
-            background: '#fde8ea', border: '1px solid #f5c6cb',
-            borderRadius: '10px', padding: '14px 20px',
-            marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px'
-          }}>
-            <span style={{ fontSize: '1.4rem' }}>⚠️</span>
-            <div>
-              <strong style={{ color: '#c62828' }}>
-                {overdueCount} overdue vaccination{overdueCount > 1 ? 's' : ''}!
-              </strong>
-              <p style={{ fontSize: '0.85rem', color: '#c62828', margin: 0 }}>
-                Please check and update the records below.
-              </p>
-            </div>
+        {/* ===== OVERDUE ALERT — animate from right ===== */}
+        <Animate direction="right">
+          <div>
+            {overdueCount > 0 && (
+              <div style={{
+                background: '#fde8ea', border: '1px solid #f5c6cb',
+                borderRadius: '10px', padding: '14px 20px',
+                marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px'
+              }}>
+                <span style={{ fontSize: '1.4rem' }}>⚠️</span>
+                <div>
+                  <strong style={{ color: '#c62828' }}>
+                    {overdueCount} overdue vaccination{overdueCount > 1 ? 's' : ''}!
+                  </strong>
+                  <p style={{ fontSize: '0.85rem', color: '#c62828', margin: 0 }}>
+                    Please check and update the records below.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </Animate>
 
-        {/* Filter */}
-        <div className="filter-bar">
-          <select className="search-input"
-            style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
-            value={filterAnimal} onChange={e => setFilterAnimal(e.target.value)}>
-            <option value="">All Animals</option>
-            {animals.map(a => (
-              <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
-            ))}
-          </select>
-        </div>
+        {/* ===== FILTER BAR — animate from left ===== */}
+        <Animate direction="left">
+          <div className="filter-bar">
+            <select
+              className="search-input"
+              style={{ flex: 'none', width: 'auto', minWidth: '200px' }}
+              value={filterAnimal}
+              onChange={e => setFilterAnimal(e.target.value)}
+            >
+              <option value="">All Animals</option>
+              {animals.map(a => (
+                <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
+              ))}
+            </select>
+          </div>
+        </Animate>
 
-        {/* Table */}
-        <div className="card">
-          {loading ? (
-            <div className="empty-state"><p>Loading...</p></div>
-          ) : records.length === 0 ? (
-            <div className="empty-state">
-              <div className="icon">💉</div>
-              <h3>No vaccination records</h3>
-              <p>Start tracking medicines and vaccinations for your animals</p>
-              <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Animal</th>
-                    <th>Vaccine / Medicine</th>
-                    <th>Type</th>
-                    <th>Dosage</th>
-                    <th>Date</th>
-                    <th>Next Due</th>
-                    <th>Cost</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map(r => (
-                    <tr key={r._id}>
-                      <td>
-                        <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          {r.animal?.species}
-                        </div>
-                      </td>
-                      <td>
-                        <strong>{r.vaccineName}</strong>
-                        {r.givenBy && (
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            By: {r.givenBy}
-                          </div>
-                        )}
-                      </td>
-                      <td><span className={`badge ${typeMap[r.vaccineType]}`}>{r.vaccineType}</span></td>
-                      <td>{r.dosage || '—'}</td>
-                      <td>{r.date ? new Date(r.date).toLocaleDateString() : '—'}</td>
-                      <td>
-                        {r.nextDueDate ? (
-                          <span style={{ color: new Date(r.nextDueDate) < new Date() ? 'var(--danger)' : 'var(--text)' }}>
-                            {new Date(r.nextDueDate).toLocaleDateString()}
-                          </span>
-                        ) : '—'}
-                      </td>
-                      <td>{r.cost ? `PKR ${Number(r.cost).toLocaleString()}` : '—'}</td>
-                      <td><span className={`badge ${statusMap[r.status]}`}>{r.status}</span></td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
-                        </div>
-                      </td>
+        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        <Animate direction="up" delay={120}>
+          <div className="card">
+            {loading ? (
+              <div className="empty-state"><p>Loading...</p></div>
+            ) : records.length === 0 ? (
+              <div className="empty-state">
+                <div className="icon">💉</div>
+                <h3>No vaccination records</h3>
+                <p>Start tracking medicines and vaccinations for your animals</p>
+                <button className="btn btn-primary" onClick={openAdd}>+ Add Record</button>
+              </div>
+            ) : (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Animal</th><th>Vaccine / Medicine</th><th>Type</th>
+                      <th>Dosage</th><th>Date</th><th>Next Due</th>
+                      <th>Cost</th><th>Status</th><th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {records.map(r => (
+                      <tr key={r._id}>
+                        <td>
+                          <strong>{r.animal?.name || r.animal?.tagId || '—'}</strong>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{r.animal?.species}</div>
+                        </td>
+                        <td>
+                          <strong>{r.vaccineName}</strong>
+                          {r.givenBy && (
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>By: {r.givenBy}</div>
+                          )}
+                        </td>
+                        <td><span className={`badge ${typeMap[r.vaccineType]}`}>{r.vaccineType}</span></td>
+                        <td>{r.dosage || '—'}</td>
+                        <td>{r.date ? new Date(r.date).toLocaleDateString() : '—'}</td>
+                        <td>
+                          {r.nextDueDate ? (
+                            <span style={{ color: new Date(r.nextDueDate) < new Date() ? 'var(--danger)' : 'var(--text)' }}>
+                              {new Date(r.nextDueDate).toLocaleDateString()}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td>{r.cost ? `PKR ${Number(r.cost).toLocaleString()}` : '—'}</td>
+                        <td><span className={`badge ${statusMap[r.status]}`}>{r.status}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(r)}>Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(r._id)}>Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </Animate>
+
       </div>
 
-      {/* Modal */}
+      {/* ===== MODAL ===== */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -284,7 +268,6 @@ export default function VaccinationRecords() {
                       placeholder="e.g. Foot & Mouth Vaccine" required />
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Type</label>
@@ -301,7 +284,6 @@ export default function VaccinationRecords() {
                     </select>
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Dosage</label>
@@ -316,7 +298,6 @@ export default function VaccinationRecords() {
                       placeholder="e.g. Dr. Ahmed" />
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Date *</label>
@@ -329,14 +310,12 @@ export default function VaccinationRecords() {
                       onChange={e => setForm(p => ({ ...p, nextDueDate: e.target.value }))} />
                   </div>
                 </div>
-
                 <div className="form-group">
                   <label>Cost (PKR)</label>
                   <input type="number" value={form.cost}
                     onChange={e => setForm(p => ({ ...p, cost: e.target.value }))}
                     min="0" placeholder="0" />
                 </div>
-
                 <div className="form-group">
                   <label>Notes</label>
                   <textarea value={form.notes}
@@ -344,7 +323,6 @@ export default function VaccinationRecords() {
                     rows={3} style={{ resize: 'vertical' }}
                     placeholder="Any observations or additional notes..." />
                 </div>
-
                 <div className="form-actions">
                   <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
@@ -356,16 +334,17 @@ export default function VaccinationRecords() {
           </div>
         </div>
       )}
+
       <ConfirmModal
-  isOpen={confirmState.isOpen}
-  title={confirmState.title}
-  message={confirmState.message}
-  confirmText={confirmState.confirmText}
-  cancelText={confirmState.cancelText}
-  type={confirmState.type}
-  onConfirm={handleConfirm}
-  onCancel={handleCancel}
-/>
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        type={confirmState.type}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
